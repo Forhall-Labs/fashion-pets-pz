@@ -6,9 +6,18 @@ import type { NextConfig } from "next";
 //   - Nominatim geocoding (server-side only, no browser call needed)
 //   - Maps deep links (Waze/Google Maps) and wa.me are top-level navigations,
 //     not fetch/frame targets, so they don't need a CSP entry.
+//
+// script-src needs 'unsafe-inline' — the App Router streams RSC payloads via
+// inline <script> tags (self.__next_f.push(...)), and without a nonce (see
+// node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md)
+// there's no way to allow those selectively. 'unsafe-eval' is dev-only:
+// React uses eval() there to reconstruct server error stacks in the browser.
+// Upgrading to a per-request nonce (drops 'unsafe-inline', forces every page
+// to render dynamically) is a reasonable next hardening step, not done here.
+const isDev = process.env.NODE_ENV === "development";
 const csp = [
   "default-src 'self'",
-  "script-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self' data:",
