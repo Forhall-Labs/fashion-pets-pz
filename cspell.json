@@ -49,7 +49,11 @@
     "unranked",
     "geist",
     "monday",
-    "sunday"
+    "sunday",
+    "commitear",
+    "mergear",
+    "navigations",
+    "nosniff"
   ],
   "ignorePaths": [
     "node_modules",
