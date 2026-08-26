@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda — Peluquería Canina (Prototipo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+<div id="modal-root"></div>
+
+<!-- ===================== SCREEN 1: LOGIN ===================== -->
+<section id="screen-login" class="screen screen-login" data-screen="login">
+  <form id="login-form" class="login-card card">
+    <div class="login-brand">
+      <span class="login-brand-mark">🐾</span>
+      <h1 class="login-title">Agenda</h1>
+      <p class="login-subtitle">Peluquería Canina — acceso Admin</p>
+    </div>
+    <div class="field">
+      <label for="login-email">Usuario</label>
+      <input id="login-email" type="text" value="admin@peluqueria.com" required>
+    </div>
+    <div class="field">
+      <label for="login-password">Contraseña</label>
+      <input id="login-password" type="password" value="••••••••" required>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+    <p class="login-hint">Prototipo — cualquier valor funciona.</p>
+  </form>
+</section>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app-shell" class="app-shell" hidden>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="login-brand-mark">🐾</span>
+      <span class="topbar-title">Agenda</span>
+    </div>
+    <nav class="main-nav" id="main-nav">
+      <button class="nav-link" data-nav="agenda">Agenda</button>
+      <button class="nav-link" data-nav="owners">Dueños</button>
+      <button class="nav-link" data-nav="waiting-list">Lista de espera</button>
+      <button class="nav-link" data-nav="pickups">Pickups</button>
+      <button class="nav-link" data-nav="config">Configuración</button>
+    </nav>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Salir</button>
+  </header>
+
+  <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Abrir menú">☰</button>
+
+  <main class="main-content" id="main-content">
+
+    <!-- ===================== SCREEN 2: AGENDA ===================== -->
+    <section class="screen" data-screen="agenda" hidden>
+      <div class="screen-header">
+        <h1 class="text-h1">Agenda</h1>
+        <button class="btn btn-primary" data-action="new-appointment">+ Nueva cita</button>
+      </div>
+
+      <div class="agenda-toolbar">
+        <div class="view-tabs" id="view-tabs">
+          <button class="view-tab is-active" data-view="day">Día</button>
+          <button class="view-tab" data-view="week">Semana</button>
+          <button class="view-tab" data-view="month">Mes</button>
+          <button class="view-tab" data-view="year">Año</button>
+        </div>
+        <div class="agenda-nav">
+          <button class="btn btn-ghost btn-icon" data-action="cal-prev" aria-label="Anterior">‹</button>
+          <span class="agenda-current-label" id="agenda-current-label"></span>
+          <button class="btn btn-ghost btn-icon" data-action="cal-next" aria-label="Siguiente">›</button>
+          <button class="btn btn-secondary btn-sm" data-action="cal-today">Hoy</button>
+        </div>
+      </div>
+
+      <div id="calendar-root" class="calendar-root"></div>
+    </section>
+
+    <!-- ===================== SCREEN 5: DUEÑOS - LISTA ===================== -->
+    <section class="screen" data-screen="owners" hidden>
+      <div class="screen-header">
+        <h1 class="text-h1">Dueños</h1>
+        <button class="btn btn-primary" data-action="new-owner">+ Nuevo dueño</button>
+      </div>
+      <div class="field field-search">
+        <input type="search" id="owners-search" placeholder="Buscar por nombre o teléfono…">
+      </div>
+      <div id="owners-table" class="data-table"></div>
+    </section>
+
+    <!-- ===================== SCREEN 6: FICHA DEL DUEÑO ===================== -->
+    <section class="screen" data-screen="owner-detail" hidden>
+      <div class="screen-header">
+        <button class="btn btn-ghost btn-sm" data-action="back-to-owners">← Dueños</button>
+      </div>
+      <div id="owner-detail-root"></div>
+    </section>
+
+    <!-- ===================== SCREEN 8: LISTA DE ESPERA ===================== -->
+    <section class="screen" data-screen="waiting-list" hidden>
+      <div class="screen-header">
+        <h1 class="text-h1">Lista de espera</h1>
+        <button class="btn btn-primary" data-action="add-to-waiting-list">+ Agregar mascota</button>
+      </div>
+      <div id="recommendation-root"></div>
+      <div id="waiting-list-root" class="data-table"></div>
+    </section>
+
+    <!-- ===================== SCREEN 9: PICKUPS DEL DÍA ===================== -->
+    <section class="screen" data-screen="pickups" hidden>
+      <div class="screen-header">
+        <h1 class="text-h1">Pickups del día</h1>
+        <div class="field field-inline">
+          <label for="pickup-date">Fecha</label>
+          <input type="date" id="pickup-date">
+        </div>
+      </div>
+      <div id="pickups-root"></div>
+    </section>
+
+    <!-- ===================== SCREEN 10: CONFIGURACIÓN DE TIENDA ===================== -->
+    <section class="screen" data-screen="config" hidden>
+      <div class="screen-header">
+        <h1 class="text-h1">Configuración de tienda</h1>
+      </div>
+      <div id="config-root"></div>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

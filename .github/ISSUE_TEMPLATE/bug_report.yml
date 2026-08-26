@@ -1,0 +1,39 @@
+name: Bug
+description: Algo no funciona como debería.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: ¿Qué pasó?
+      description: Qué esperabas que pasara y qué pasó en realidad.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: |
+        1. Ir a...
+        2. Hacer click en...
+        3. Ver el error...
+    validations:
+      required: true
+  - type: input
+    id: hu
+    attributes:
+      label: HU / pantalla afectada
+      placeholder: "Ej: HU-2.3 — Reprogramar cita por drag-and-drop"
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidad
+      options:
+        - Bloqueante (no se puede usar el sistema)
+        - Alta (rompe un flujo importante)
+        - Media (molesta pero hay vuelta)
+        - Baja (cosmético)
+    validations:
+      required: true

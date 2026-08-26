@@ -1,0 +1,17 @@
+name: Feature / mejora
+description: Algo que falta o que se podría hacer mejor.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: ¿Qué necesitás?
+      description: Contexto del pedido — a qué HU o épica corresponde, si aplica.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: ¿Por qué hace falta?
+    validations:
+      required: false
