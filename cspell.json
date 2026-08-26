@@ -73,7 +73,14 @@
     "Shih",
     "testear",
     "topbar",
-    "clicables"
+    "clicables",
+    "reusar",
+    "reusa",
+    "mutarlo",
+    "malformados",
+    "sobreescribe",
+    "destilda",
+    "Forhall"
   ],
   "ignorePaths": [
     "node_modules",
