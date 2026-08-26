@@ -22,14 +22,14 @@ Abrí [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-| Comando                | Qué hace                                             |
-| ----------------------- | ----------------------------------------------------- |
-| `npm run dev`           | Servidor de desarrollo                                 |
-| `npm run build`         | Build de producción (incluye chequeo de tipos)         |
-| `npm run lint`          | ESLint                                                  |
-| `npm run format`        | Aplica formato con Prettier                             |
-| `npm run format:check`  | Verifica formato sin modificar archivos                |
-| `npm run spell`         | Chequeo ortográfico (`cspell`, español + inglés)        |
+| Comando                | Qué hace                                         |
+| ---------------------- | ------------------------------------------------ |
+| `npm run dev`          | Servidor de desarrollo                           |
+| `npm run build`        | Build de producción (incluye chequeo de tipos)   |
+| `npm run lint`         | ESLint                                           |
+| `npm run format`       | Aplica formato con Prettier                      |
+| `npm run format:check` | Verifica formato sin modificar archivos          |
+| `npm run spell`        | Chequeo ortográfico (`cspell`, español + inglés) |
 
 ## CI/CD
 
