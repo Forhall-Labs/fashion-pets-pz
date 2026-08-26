@@ -16,6 +16,13 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Throwaway static prototype, not part of the Next.js app.
     "docs/prototype/**",
+    // Prisma Next generated artifacts and agent-skill caches.
+    "src/prisma/contract.d.ts",
+    "migrations/**",
+    ".agents/**",
+    ".cursor/**",
+    ".devin/**",
+    ".claude/skills/**",
   ]),
 ]);
 

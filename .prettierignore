@@ -7,3 +7,13 @@ public
 package-lock.json
 docs
 .vscode
+
+# Prisma Next generated artifacts — never hand-formatted, re-emitted by
+# `prisma contract emit`.
+src/prisma/contract.json
+src/prisma/contract.d.ts
+migrations/
+.agents
+.cursor
+.devin
+.claude/skills
