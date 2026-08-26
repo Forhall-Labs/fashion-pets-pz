@@ -46,5 +46,3 @@ completo.
 - [`docs/User_Histories.md`](docs/User_Histories.md) — épicas e historias de usuario
 - [`docs/system_design.md`](docs/system_design.md) — arquitectura, stack y esquema de base de datos
 - [`docs/ui-spec.md`](docs/ui-spec.md) — sistema de diseño y mapa de pantallas
-
-<!-- ci-trigger-diagnostic -->
