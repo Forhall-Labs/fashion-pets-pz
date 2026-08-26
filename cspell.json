@@ -54,15 +54,7 @@
     "mergear",
     "navigations",
     "nosniff",
-    "jwks",
-    "jwksUrl",
-    "asServiceRole",
-    "onDelete",
-    "devin",
     "claude",
-    "supabase",
-    "postgres",
-    "façade",
     "tuesday",
     "wednesday",
     "thursday",
@@ -81,14 +73,6 @@
     "docs/**/*.pdf",
     "docs/**/*.xlsx",
     "public",
-    "*.svg",
-    "src/prisma/contract.json",
-    "src/prisma/contract.d.ts",
-    "migrations",
-    ".agents",
-    ".cursor",
-    ".devin",
-    ".claude/skills",
-    "prisma-next.md"
+    "*.svg"
   ]
 }

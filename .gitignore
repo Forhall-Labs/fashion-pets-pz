@@ -39,15 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-node_modules/
-dist/
-.env
-
-# Prisma agent skills for tools we don't use in this repo (we use Claude Code
-# — .claude/skills stays tracked, `prisma skills sync` regenerates the rest).
-.agents/
-.cursor/
-.devin/
-
-# Supabase CLI's local project-link cache (per-machine, not shared).
-supabase/.temp/
