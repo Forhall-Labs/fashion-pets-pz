@@ -1,0 +1,1189 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.appointments",
+    "label": "Create table \"appointments\"",
+    "summary": "Creates table \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"appointments\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"appointments\"",
+        "sql": "CREATE TABLE \"public\".\"appointments\" (\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"date\" date NOT NULL,\n  \"duration_minutes\" int4 NOT NULL,\n  \"flagged_reason\" text,\n  \"id\" uuid NOT NULL,\n  \"pet_id\" uuid NOT NULL,\n  \"service_type\" text NOT NULL,\n  \"source\" text NOT NULL,\n  \"start_time\" time NOT NULL,\n  \"status\" text DEFAULT 'scheduled' NOT NULL,\n  \"updated_at\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"appointments_service_type_check_53dd9159\" CHECK (\"service_type\" IN ('full_groom', 'quick_service')),\n  CONSTRAINT \"appointments_source_check_f0dbab61\" CHECK (\"source\" IN ('manual', 'auto_scheduled', 'waiting_list_approval')),\n  CONSTRAINT \"appointments_status_check_98d653cd\" CHECK (\"status\" IN ('scheduled', 'completed', 'cancelled'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"appointments\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.blackout_periods",
+    "label": "Create table \"blackout_periods\"",
+    "summary": "Creates table \"blackout_periods\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "blackout_periods"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"blackout_periods\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"blackout_periods\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"blackout_periods\"",
+        "sql": "CREATE TABLE \"public\".\"blackout_periods\" (\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"end_date\" date NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"label\" text,\n  \"start_date\" date NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"blackout_periods_end_after_start_a710e474\" CHECK (end_date >= start_date)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"blackout_periods\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"blackout_periods\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.owners",
+    "label": "Create table \"owners\"",
+    "summary": "Creates table \"owners\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "owners"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"owners\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"owners\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"owners\"",
+        "sql": "CREATE TABLE \"public\".\"owners\" (\n  \"address\" text,\n  \"address_lat\" numeric,\n  \"address_lng\" numeric,\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"fixed_visit_day\" text,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"phone\" text NOT NULL,\n  \"updated_at\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"owners_fixed_visit_day_check_cedf55ba\" CHECK (\"fixed_visit_day\" IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"owners\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"owners\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.pets",
+    "label": "Create table \"pets\"",
+    "summary": "Creates table \"pets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "pets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"pets\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pets\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"pets\"",
+        "sql": "CREATE TABLE \"public\".\"pets\" (\n  \"avg_service_duration_minutes\" int4,\n  \"breed\" text,\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"grooming_frequency\" text,\n  \"id\" uuid NOT NULL,\n  \"is_aggressive\" bool DEFAULT false NOT NULL,\n  \"location_address\" text,\n  \"location_lat\" numeric,\n  \"location_lng\" numeric,\n  \"name\" text NOT NULL,\n  \"needs_pickup\" bool DEFAULT false NOT NULL,\n  \"owner_id\" uuid NOT NULL,\n  \"size\" text NOT NULL,\n  \"updated_at\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"pets_grooming_frequency_check_268ed8d2\" CHECK (\"grooming_frequency\" IN ('twice_a_month', 'once_a_month', 'once_every_two_months')),\n  CONSTRAINT \"pets_size_check_b0c72280\" CHECK (\"size\" IN ('small', 'medium', 'extra_large'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"pets\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pets\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.shop_config",
+    "label": "Create table \"shop_config\"",
+    "summary": "Creates table \"shop_config\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "shop_config"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"shop_config\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shop_config\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"shop_config\"",
+        "sql": "CREATE TABLE \"public\".\"shop_config\" (\n  \"close_time\" time NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"max_pets_per_day\" int4 NOT NULL,\n  \"open_time\" time NOT NULL,\n  \"quick_service_duration_minutes\" int4,\n  \"updated_at\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"shop_config_close_after_open_23e29035\" CHECK (close_time > open_time),\n  CONSTRAINT \"shop_config_max_pets_per_day_positive_a010f6bd\" CHECK (max_pets_per_day > 0)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"shop_config\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shop_config\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.waiting_list_entries",
+    "label": "Create table \"waiting_list_entries\"",
+    "summary": "Creates table \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"waiting_list_entries\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"waiting_list_entries\"",
+        "sql": "CREATE TABLE \"public\".\"waiting_list_entries\" (\n  \"created_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"fulfilled_appointment_id\" uuid,\n  \"id\" uuid NOT NULL,\n  \"pet_id\" uuid NOT NULL,\n  \"preferred_end_date\" date,\n  \"preferred_start_date\" date,\n  \"status\" text DEFAULT 'active' NOT NULL,\n  \"updated_at\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"waiting_list_entries_status_check_498857ef\" CHECK (\"status\" IN ('active', 'fulfilled', 'cancelled'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"waiting_list_entries\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.waiting_list_entries.waiting_list_entries_fulfilled_appointment_id_key",
+    "label": "Add unique constraint on \"waiting_list_entries\" (fulfilled_appointment_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "waiting_list_entries_fulfilled_appointment_id_key",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"waiting_list_entries_fulfilled_appointment_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_fulfilled_appointment_id_key",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"waiting_list_entries_fulfilled_appointment_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"waiting_list_entries\" ADD CONSTRAINT \"waiting_list_entries_fulfilled_appointment_id_key\" UNIQUE (\"fulfilled_appointment_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"waiting_list_entries_fulfilled_appointment_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_fulfilled_appointment_id_key",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appointments_date_idx_b4ca319c",
+    "label": "Create index \"appointments_date_idx_b4ca319c\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "appointments_date_idx_b4ca319c",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointments_date_idx_b4ca319c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments_date_idx_b4ca319c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointments_date_idx_b4ca319c\"",
+        "sql": "CREATE INDEX \"appointments_date_idx_b4ca319c\" ON \"public\".\"appointments\" (\"date\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointments_date_idx_b4ca319c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments_date_idx_b4ca319c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appointments_pet_id_idx_c47af682",
+    "label": "Create index \"appointments_pet_id_idx_c47af682\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "appointments_pet_id_idx_c47af682",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointments_pet_id_idx_c47af682\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments_pet_id_idx_c47af682\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointments_pet_id_idx_c47af682\"",
+        "sql": "CREATE INDEX \"appointments_pet_id_idx_c47af682\" ON \"public\".\"appointments\" (\"pet_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointments_pet_id_idx_c47af682\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appointments_pet_id_idx_c47af682\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.blackout_periods.blackout_periods_start_date_end_date_idx_7bb2ae1b",
+    "label": "Create index \"blackout_periods_start_date_end_date_idx_7bb2ae1b\" on \"blackout_periods\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "blackout_periods_start_date_end_date_idx_7bb2ae1b",
+        "table": "blackout_periods"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"blackout_periods_start_date_end_date_idx_7bb2ae1b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"blackout_periods_start_date_end_date_idx_7bb2ae1b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"blackout_periods_start_date_end_date_idx_7bb2ae1b\"",
+        "sql": "CREATE INDEX \"blackout_periods_start_date_end_date_idx_7bb2ae1b\" ON \"public\".\"blackout_periods\" (\"start_date\", \"end_date\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"blackout_periods_start_date_end_date_idx_7bb2ae1b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"blackout_periods_start_date_end_date_idx_7bb2ae1b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.pets.pets_owner_id_idx_ade9f347",
+    "label": "Create index \"pets_owner_id_idx_ade9f347\" on \"pets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "pets_owner_id_idx_ade9f347",
+        "table": "pets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pets_owner_id_idx_ade9f347\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pets_owner_id_idx_ade9f347\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pets_owner_id_idx_ade9f347\"",
+        "sql": "CREATE INDEX \"pets_owner_id_idx_ade9f347\" ON \"public\".\"pets\" (\"owner_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pets_owner_id_idx_ade9f347\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pets_owner_id_idx_ade9f347\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.waiting_list_entries.waiting_list_entries_pet_id_idx_c47af682",
+    "label": "Create index \"waiting_list_entries_pet_id_idx_c47af682\" on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "waiting_list_entries_pet_id_idx_c47af682",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"waiting_list_entries_pet_id_idx_c47af682\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries_pet_id_idx_c47af682\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"waiting_list_entries_pet_id_idx_c47af682\"",
+        "sql": "CREATE INDEX \"waiting_list_entries_pet_id_idx_c47af682\" ON \"public\".\"waiting_list_entries\" (\"pet_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"waiting_list_entries_pet_id_idx_c47af682\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries_pet_id_idx_c47af682\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.waiting_list_entries.waiting_list_entries_status_idx_e98638ab",
+    "label": "Create index \"waiting_list_entries_status_idx_e98638ab\" on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "waiting_list_entries_status_idx_e98638ab",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"waiting_list_entries_status_idx_e98638ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries_status_idx_e98638ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"waiting_list_entries_status_idx_e98638ab\"",
+        "sql": "CREATE INDEX \"waiting_list_entries_status_idx_e98638ab\" ON \"public\".\"waiting_list_entries\" (\"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"waiting_list_entries_status_idx_e98638ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"waiting_list_entries_status_idx_e98638ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointments.appointments_pet_id_fkey",
+    "label": "Add foreign key \"appointments_pet_id_fkey\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "appointments_pet_id_fkey",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointments_pet_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_pet_id_fkey",
+          "public",
+          "\"public\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointments_pet_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"appointments\"\nADD CONSTRAINT \"appointments_pet_id_fkey\"\nFOREIGN KEY (\"pet_id\")\nREFERENCES \"public\".\"pets\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointments_pet_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_pet_id_fkey",
+          "public",
+          "\"public\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.pets.pets_owner_id_fkey",
+    "label": "Add foreign key \"pets_owner_id_fkey\" on \"pets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "pets_owner_id_fkey",
+        "table": "pets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"pets_owner_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pets_owner_id_fkey",
+          "public",
+          "\"public\".\"pets\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"pets_owner_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"pets\"\nADD CONSTRAINT \"pets_owner_id_fkey\"\nFOREIGN KEY (\"owner_id\")\nREFERENCES \"public\".\"owners\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"pets_owner_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pets_owner_id_fkey",
+          "public",
+          "\"public\".\"pets\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.waiting_list_entries.waiting_list_entries_pet_id_fkey",
+    "label": "Add foreign key \"waiting_list_entries_pet_id_fkey\" on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "waiting_list_entries_pet_id_fkey",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"waiting_list_entries_pet_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_pet_id_fkey",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"waiting_list_entries_pet_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"waiting_list_entries\"\nADD CONSTRAINT \"waiting_list_entries_pet_id_fkey\"\nFOREIGN KEY (\"pet_id\")\nREFERENCES \"public\".\"pets\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"waiting_list_entries_pet_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_pet_id_fkey",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.waiting_list_entries.waiting_list_entries_fulfilled_appointment_id_fkey",
+    "label": "Add foreign key \"waiting_list_entries_fulfilled_appointment_id_fkey\" on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "waiting_list_entries_fulfilled_appointment_id_fkey",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"waiting_list_entries_fulfilled_appointment_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_fulfilled_appointment_id_fkey",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"waiting_list_entries_fulfilled_appointment_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"waiting_list_entries\"\nADD CONSTRAINT \"waiting_list_entries_fulfilled_appointment_id_fkey\"\nFOREIGN KEY (\"fulfilled_appointment_id\")\nREFERENCES \"public\".\"appointments\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"waiting_list_entries_fulfilled_appointment_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "waiting_list_entries_fulfilled_appointment_id_fkey",
+          "public",
+          "\"public\".\"waiting_list_entries\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.appointments",
+    "label": "Enable row-level security on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"appointments\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "appointments"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"appointments\"",
+        "sql": "ALTER TABLE \"public\".\"appointments\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"appointments\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "appointments"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.blackout_periods",
+    "label": "Enable row-level security on \"blackout_periods\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "blackout_periods"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"blackout_periods\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "blackout_periods"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"blackout_periods\"",
+        "sql": "ALTER TABLE \"public\".\"blackout_periods\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"blackout_periods\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "blackout_periods"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.owners",
+    "label": "Enable row-level security on \"owners\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "owners"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"owners\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "owners"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"owners\"",
+        "sql": "ALTER TABLE \"public\".\"owners\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"owners\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "owners"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.pets",
+    "label": "Enable row-level security on \"pets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "pets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"pets\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "pets"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"pets\"",
+        "sql": "ALTER TABLE \"public\".\"pets\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"pets\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "pets"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.shop_config",
+    "label": "Enable row-level security on \"shop_config\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "shop_config"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"shop_config\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "shop_config"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"shop_config\"",
+        "sql": "ALTER TABLE \"public\".\"shop_config\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"shop_config\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "shop_config"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.waiting_list_entries",
+    "label": "Enable row-level security on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"waiting_list_entries\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "waiting_list_entries"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"waiting_list_entries\"",
+        "sql": "ALTER TABLE \"public\".\"waiting_list_entries\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"waiting_list_entries\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "waiting_list_entries"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.appointments.appointments_admin_only_935c2c52",
+    "label": "Create RLS policy \"appointments_admin_only_935c2c52\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "appointments_admin_only_935c2c52",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"appointments_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "appointments",
+          "appointments_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"appointments_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"appointments_admin_only_935c2c52\" ON \"public\".\"appointments\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"appointments_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "appointments",
+          "appointments_admin_only_935c2c52"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.blackout_periods.blackout_periods_admin_only_935c2c52",
+    "label": "Create RLS policy \"blackout_periods_admin_only_935c2c52\" on \"blackout_periods\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "blackout_periods_admin_only_935c2c52",
+        "table": "blackout_periods"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"blackout_periods_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "blackout_periods",
+          "blackout_periods_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"blackout_periods_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"blackout_periods_admin_only_935c2c52\" ON \"public\".\"blackout_periods\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"blackout_periods_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "blackout_periods",
+          "blackout_periods_admin_only_935c2c52"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.owners.owners_admin_only_935c2c52",
+    "label": "Create RLS policy \"owners_admin_only_935c2c52\" on \"owners\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "owners_admin_only_935c2c52",
+        "table": "owners"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"owners_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "owners",
+          "owners_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"owners_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"owners_admin_only_935c2c52\" ON \"public\".\"owners\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"owners_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "owners",
+          "owners_admin_only_935c2c52"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.pets.pets_admin_only_935c2c52",
+    "label": "Create RLS policy \"pets_admin_only_935c2c52\" on \"pets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "pets_admin_only_935c2c52",
+        "table": "pets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"pets_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "pets",
+          "pets_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"pets_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"pets_admin_only_935c2c52\" ON \"public\".\"pets\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"pets_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "pets",
+          "pets_admin_only_935c2c52"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.shop_config.shop_config_admin_only_935c2c52",
+    "label": "Create RLS policy \"shop_config_admin_only_935c2c52\" on \"shop_config\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "shop_config_admin_only_935c2c52",
+        "table": "shop_config"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"shop_config_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "shop_config",
+          "shop_config_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"shop_config_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"shop_config_admin_only_935c2c52\" ON \"public\".\"shop_config\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"shop_config_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "shop_config",
+          "shop_config_admin_only_935c2c52"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.waiting_list_entries.waiting_list_entries_admin_only_935c2c52",
+    "label": "Create RLS policy \"waiting_list_entries_admin_only_935c2c52\" on \"waiting_list_entries\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "waiting_list_entries_admin_only_935c2c52",
+        "table": "waiting_list_entries"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"waiting_list_entries_admin_only_935c2c52\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "waiting_list_entries",
+          "waiting_list_entries_admin_only_935c2c52"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"waiting_list_entries_admin_only_935c2c52\"",
+        "sql": "CREATE POLICY \"waiting_list_entries_admin_only_935c2c52\" ON \"public\".\"waiting_list_entries\" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"waiting_list_entries_admin_only_935c2c52\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "waiting_list_entries",
+          "waiting_list_entries_admin_only_935c2c52"
+        ]
+      }
+    ]
+  }
+]

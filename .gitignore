@@ -48,3 +48,6 @@ dist/
 .agents/
 .cursor/
 .devin/
+
+# Supabase CLI's local project-link cache (per-machine, not shared).
+supabase/.temp/
