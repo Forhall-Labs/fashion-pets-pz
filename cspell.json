@@ -59,7 +59,21 @@
     "wednesday",
     "thursday",
     "friday",
-    "saturday"
+    "saturday",
+    "wireado",
+    "appt",
+    "Appts",
+    "daynum",
+    "resetea",
+    "Ingresá",
+    "whatsapp",
+    "CABA",
+    "Rivadavia",
+    "Ibarra",
+    "Shih",
+    "testear",
+    "topbar",
+    "clicables"
   ],
   "ignorePaths": [
     "node_modules",
