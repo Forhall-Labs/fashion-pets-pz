@@ -1,37 +1,66 @@
-name: Deploy to Vercel
+name: CI/CD
 
-# Runs only after CI has passed on dev/stage/main, so a broken lint/spell/
-# build never reaches any environment even though Vercel's own build step is
-# more lenient. Branch → Vercel environment:
-#   dev   -> "dev" custom environment (Vercel creates it on first deploy)
-#   stage -> "stage" custom environment (QA)
-#   main  -> production
+# One workflow for checks + deploy (not two files joined by workflow_run) —
+# workflow_run reads its trigger config from the default branch, so a
+# dev/stage-only trigger defined there never fires until it reaches main.
+# push/pull_request don't have that problem: they always run the version of
+# the workflow that's actually on the commit being processed.
 on:
-  workflow_run:
-    workflows: ["CI"]
+  pull_request:
     branches: [dev, stage, main]
-    types: [completed]
+  push:
+    branches: [dev, stage, main]
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  checks:
+    name: Format, spell, lint & build
     runs-on: ubuntu-latest
-    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || github.event.workflow_run.head_branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Spell check
+        run: npm run spell
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (includes type-check)
+        run: npm run build
+
+  deploy:
+    name: Deploy
+    needs: checks
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
 
       - name: Resolve Vercel target from branch
         id: target
         run: |
-          branch="${{ github.event.workflow_run.head_branch }}"
-          if [ "$branch" = "main" ]; then
+          if [ "${{ github.ref_name }}" = "main" ]; then
             echo "target=production" >> "$GITHUB_OUTPUT"
           else
-            echo "target=$branch" >> "$GITHUB_OUTPUT"
+            echo "target=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check Vercel secrets are configured

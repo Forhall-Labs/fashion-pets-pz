@@ -38,10 +38,10 @@ Si alguno falla, `npm run format` corrige lo que se pueda automáticamente.
 
 ## Notas sobre el deploy
 
-- `.github/workflows/deploy.yml` corre después de que `CI` termina en
-  `dev`/`stage`/`main` (nunca antes, para que un build roto no llegue a
-  ningún ambiente) y mapea la rama al target de Vercel correspondiente
-  (`vercel deploy --target=<dev|stage|production>`).
+- `.github/workflows/ci-cd.yml` tiene un solo workflow con dos jobs: `checks`
+  (siempre) y `deploy` (`needs: checks`, solo en push a `dev`/`stage`/`main`)
+  — así un build roto nunca llega a ningún ambiente, y mapea la rama al
+  target de Vercel correspondiente (`vercel deploy --target=<dev|stage|production>`).
 - Los ambientes `dev` y `stage` son **Custom Environments** de Vercel — se
   crean solos la primera vez que se despliega con ese `--target`, no hace
   falta configurarlos a mano en el dashboard.
