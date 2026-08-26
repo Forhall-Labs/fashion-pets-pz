@@ -2,6 +2,10 @@
 
 <!-- Qué cambia y por qué. -->
 
+## Rama destino
+
+<!-- dev (integración) · stage (QA) · main (producción) — borrar las que no aplican. -->
+
 ## Épica / HU relacionada
 
 <!-- Ej: Epic 1 · HU-1.2 — o "N/A" si es infraestructura/tooling. -->

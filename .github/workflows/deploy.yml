@@ -1,11 +1,15 @@
-name: Deploy to Vercel (production)
+name: Deploy to Vercel
 
-# Runs only after CI has passed on main, so a broken lint/spell/build never
-# reaches production even though Vercel's own build step is more lenient.
+# Runs only after CI has passed on dev/stage/main, so a broken lint/spell/
+# build never reaches any environment even though Vercel's own build step is
+# more lenient. Branch → Vercel environment:
+#   dev   -> "dev" custom environment (Vercel creates it on first deploy)
+#   stage -> "stage" custom environment (QA)
+#   main  -> production
 on:
   workflow_run:
     workflows: ["CI"]
-    branches: [main]
+    branches: [dev, stage, main]
     types: [completed]
 
 jobs:
@@ -13,19 +17,29 @@ jobs:
     name: Deploy
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || github.event.workflow_run.head_branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Resolve Vercel target from branch
+        id: target
+        run: |
+          branch="${{ github.event.workflow_run.head_branch }}"
+          if [ "$branch" = "main" ]; then
+            echo "target=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=$branch" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check Vercel secrets are configured
         run: |
           missing=0
           for var in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!var}" ]; then
-              echo "::warning::Secret $var is not set — skipping deploy. See docs/system_design.md §2.7 for the Vercel setup."
+              echo "::warning::Secret $var is not set — skipping deploy."
               missing=1
             fi
           done
@@ -41,7 +55,9 @@ jobs:
 
       - name: Pull Vercel project settings
         if: env.missing == '0'
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: >
+          vercel pull --yes --environment=${{ steps.target.outputs.target }}
+          --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -49,16 +65,25 @@ jobs:
 
       - name: Build with Vercel
         if: env.missing == '0'
-        run: vercel build --prod --token="$VERCEL_TOKEN"
+        run: >
+          vercel build --target=${{ steps.target.outputs.target }}
+          --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Deploy prebuilt output to production
+      - name: Deploy prebuilt output
+        id: deploy
         if: env.missing == '0'
-        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        run: >
+          vercel deploy --prebuilt --target=${{ steps.target.outputs.target }}
+          --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Summary
+        if: env.missing == '0'
+        run: echo "### Deployed to \`${{ steps.target.outputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"

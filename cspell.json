@@ -80,7 +80,9 @@
     "malformados",
     "sobreescribe",
     "destilda",
-    "Forhall"
+    "Forhall",
+    "configurarlos",
+    "GHAS"
   ],
   "ignorePaths": [
     "node_modules",
