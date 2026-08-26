@@ -49,18 +49,24 @@ jobs:
     needs: checks
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Only main -> production is a real Vercel environment here. Custom
+      # environments named "dev"/"stage" don't exist (and aren't
+      # auto-created by --target — confirmed against the real project) so
+      # dev/stage both deploy as Preview. Preview URLs are per-deployment,
+      # not a stable per-branch link — see CONTRIBUTING.md if that's needed
+      # later (Vercel branch domains, Project Settings → Domains).
       - name: Resolve Vercel target from branch
         id: target
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "target=production" >> "$GITHUB_OUTPUT"
           else
-            echo "target=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "target=preview" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check Vercel secrets are configured
@@ -105,9 +111,9 @@ jobs:
       - name: Deploy prebuilt output
         id: deploy
         if: env.missing == '0'
-        run: >
-          vercel deploy --prebuilt --target=${{ steps.target.outputs.target }}
-          --token="$VERCEL_TOKEN"
+        run: |
+          url=$(vercel deploy --prebuilt --target=${{ steps.target.outputs.target }} --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -115,4 +121,6 @@ jobs:
 
       - name: Summary
         if: env.missing == '0'
-        run: echo "### Deployed to \`${{ steps.target.outputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "### Deployed to \`${{ steps.target.outputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

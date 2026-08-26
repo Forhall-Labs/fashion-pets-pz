@@ -82,7 +82,9 @@
     "destilda",
     "Forhall",
     "configurarlos",
-    "GHAS"
+    "GHAS",
+    "deployan",
+    "deploya"
   ],
   "ignorePaths": [
     "node_modules",
