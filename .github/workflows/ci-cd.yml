@@ -1,10 +1,5 @@
 name: CI/CD
 
-# One workflow for checks + deploy (not two files joined by workflow_run) —
-# workflow_run reads its trigger config from the default branch, so a
-# dev/stage-only trigger defined there never fires until it reaches main.
-# push/pull_request don't have that problem: they always run the version of
-# the workflow that's actually on the commit being processed.
 on:
   pull_request:
     branches: [dev, stage, main]
@@ -54,12 +49,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Only main -> production is a real Vercel environment here. Custom
-      # environments named "dev"/"stage" don't exist (and aren't
-      # auto-created by --target — confirmed against the real project) so
-      # dev/stage both deploy as Preview. Preview URLs are per-deployment,
-      # not a stable per-branch link — see CONTRIBUTING.md if that's needed
-      # later (Vercel branch domains, Project Settings → Domains).
       - name: Resolve Vercel target from branch
         id: target
         run: |
@@ -69,58 +58,55 @@ jobs:
             echo "target=preview" >> "$GITHUB_OUTPUT"
           fi
 
+      # Consolidating environment variables inside steps ensures clean string evaluation
       - name: Check Vercel secrets are configured
+        id: secrets_check
         run: |
-          missing=0
-          for var in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
-            if [ -z "${!var}" ]; then
-              echo "::warning::Secret $var is not set — skipping deploy."
-              missing=1
-            fi
-          done
-          echo "missing=$missing" >> "$GITHUB_ENV"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "::warning::One or more Vercel secrets are missing — skipping deploy."
+            echo "missing=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "missing=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install Vercel CLI
-        if: env.missing == '0'
+        if: steps.secrets_check.outputs.missing == '0'
         run: npm install --global vercel@latest
 
+      # FIXED: Added the --git-branch flag for pulling variables safely
       - name: Pull Vercel project settings
-        if: env.missing == '0'
+        if: steps.secrets_check.outputs.missing == '0'
         run: >
-          vercel pull --yes --environment=${{ steps.target.outputs.target }}
-          --token="$VERCEL_TOKEN"
+          vercel pull --yes 
+          --environment=${{ steps.target.outputs.target }} 
+          --git-branch=${{ github.ref_name }}
+          --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build with Vercel
-        if: env.missing == '0'
+        if: steps.secrets_check.outputs.missing == '0'
         run: >
-          vercel build --target=${{ steps.target.outputs.target }}
-          --token="$VERCEL_TOKEN"
+          vercel build 
+          --target=${{ steps.target.outputs.target }} 
+          --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Deploy prebuilt output
         id: deploy
-        if: env.missing == '0'
+        if: steps.secrets_check.outputs.missing == '0'
         run: |
-          url=$(vercel deploy --prebuilt --target=${{ steps.target.outputs.target }} --token="$VERCEL_TOKEN")
+          url=$(vercel deploy --prebuilt --target=${{ steps.target.outputs.target }} --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Summary
-        if: env.missing == '0'
+        if: steps.secrets_check.outputs.missing == '0'
         run: |
           echo "### Deployed to \`${{ steps.target.outputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
