@@ -1,85 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
 
 import { AppointmentDetailModal } from "@/modules/shared/AppointmentDetailModal";
-import {
-  MONTH_NAMES,
-  addDays,
-  addMonths,
-  formatDateShort,
-  fromISODate,
-  toISODate,
-} from "@/modules/shared/date-utils";
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
+import { mockData } from "@/modules/shared/mock-data";
 
 import { DayWeekGrid, MonthGrid, YearGrid } from "./CalendarGrids";
-
-type CalView = "day" | "week" | "month" | "year";
-
-const VIEW_TABS: { view: CalView; label: string }[] = [
-  { view: "day", label: "Día" },
-  { view: "week", label: "Semana" },
-  { view: "month", label: "Mes" },
-  { view: "year", label: "Año" },
-];
+import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
 
 // Puerto de la pantalla Agenda (screen-header + agenda-toolbar +
 // #calendar-root) de docs/prototype/prototype.html + renderAgenda() de
 // app.js. Drag-and-drop y "Nueva cita" quedan para la próxima etapa.
 export function AgendaView() {
-  const [view, setView] = useState<CalView>("month");
-  const [anchor, setAnchor] = useState(TODAY_ISO);
-  const [openAppointmentId, setOpenAppointmentId] = useState<string | null>(null);
+  const {
+    view,
+    setView,
+    label,
+    anchor,
+    anchorDate,
+    weekDays,
+    todayIso,
+    openAppointmentId,
+    openAppointment,
+    closeAppointment,
+    shift,
+    goToToday,
+    gotoMonth,
+  } = useAgendaView();
 
-  const anchorDate = fromISODate(anchor);
-
-  function shift(dir: 1 | -1) {
-    if (view === "day") setAnchor((a) => addDays(a, dir));
-    else if (view === "week") setAnchor((a) => addDays(a, dir * 7));
-    else if (view === "month") setAnchor((a) => addMonths(a, dir));
-    else setAnchor((a) => addMonths(a, dir * 12));
-  }
-
-  let label: string;
-  let grid: React.ReactNode;
-
+  let grid: ReactNode;
   if (view === "day") {
-    label = `${MONTH_NAMES[anchorDate.getMonth()]} ${anchorDate.getDate()}, ${anchorDate.getFullYear()}`;
-    grid = <DayWeekGrid data={mockData} days={[anchor]} onOpenAppointment={setOpenAppointmentId} />;
+    grid = <DayWeekGrid data={mockData} days={[anchor]} onOpenAppointment={openAppointment} />;
   } else if (view === "week") {
-    const monday = new Date(anchorDate);
-    monday.setDate(anchorDate.getDate() - ((anchorDate.getDay() + 6) % 7));
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return toISODate(d);
-    });
-    label = `${formatDateShort(days[0])} – ${formatDateShort(days[6])}`;
-    grid = <DayWeekGrid data={mockData} days={days} onOpenAppointment={setOpenAppointmentId} />;
+    grid = <DayWeekGrid data={mockData} days={weekDays!} onOpenAppointment={openAppointment} />;
   } else if (view === "month") {
-    label = `${MONTH_NAMES[anchorDate.getMonth()]} ${anchorDate.getFullYear()}`;
     grid = (
       <MonthGrid
         data={mockData}
         year={anchorDate.getFullYear()}
         monthIndex={anchorDate.getMonth()}
-        todayIso={TODAY_ISO}
-        onOpenAppointment={setOpenAppointmentId}
+        todayIso={todayIso}
+        onOpenAppointment={openAppointment}
       />
     );
   } else {
-    label = String(anchorDate.getFullYear());
-    grid = (
-      <YearGrid
-        data={mockData}
-        year={anchorDate.getFullYear()}
-        onGotoMonth={(m) => {
-          setAnchor(toISODate(new Date(anchorDate.getFullYear(), m, 1)));
-          setView("month");
-        }}
-      />
-    );
+    grid = <YearGrid data={mockData} year={anchorDate.getFullYear()} onGotoMonth={gotoMonth} />;
   }
 
   return (
@@ -119,7 +84,7 @@ export function AgendaView() {
           >
             ›
           </button>
-          <button className="btn btn-secondary btn-sm" onClick={() => setAnchor(TODAY_ISO)}>
+          <button className="btn btn-secondary btn-sm" onClick={goToToday}>
             Hoy
           </button>
         </div>
@@ -131,7 +96,7 @@ export function AgendaView() {
         <AppointmentDetailModal
           data={mockData}
           appointmentId={openAppointmentId}
-          onClose={() => setOpenAppointmentId(null)}
+          onClose={closeAppointment}
         />
       ) : null}
     </section>

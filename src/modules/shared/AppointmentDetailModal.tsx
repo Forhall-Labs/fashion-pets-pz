@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import {
   AggressiveBadge,
   ExceptionBadge,
@@ -12,9 +10,8 @@ import {
 } from "./Badge";
 import { formatDateLong } from "./date-utils";
 import { Modal, ModalHeader } from "./Modal";
-import { getAppointment, getOwner, getPet, petLocation } from "./selectors";
 import type { MockData } from "./types";
-import { whatsAppLinkForAppointment } from "./whatsapp";
+import { useAppointmentDetailModal } from "./hooks/useAppointmentDetailModal";
 
 interface AppointmentDetailModalProps {
   data: MockData;
@@ -30,9 +27,13 @@ export function AppointmentDetailModal({
   appointmentId,
   onClose,
 }: AppointmentDetailModalProps) {
-  const router = useRouter();
-  const appt = getAppointment(data, appointmentId);
-  if (!appt) {
+  const { appt, pet, owner, loc, waLink, goToOwner } = useAppointmentDetailModal(
+    data,
+    appointmentId,
+    onClose,
+  );
+
+  if (!appt || !pet || !owner) {
     return (
       <Modal onClose={onClose}>
         <ModalHeader title="Detalle de cita" onClose={onClose} />
@@ -40,10 +41,6 @@ export function AppointmentDetailModal({
       </Modal>
     );
   }
-  const pet = getPet(data, appt.petId)!;
-  const owner = getOwner(data, pet.ownerId)!;
-  const loc = petLocation(data, pet);
-  const waLink = whatsAppLinkForAppointment(appt, pet, owner);
 
   return (
     <Modal onClose={onClose}>
@@ -62,8 +59,7 @@ export function AppointmentDetailModal({
           href={`/owners/${owner.id}`}
           onClick={(e) => {
             e.preventDefault();
-            onClose();
-            router.push(`/owners/${owner.id}`);
+            goToOwner();
           }}
         >
           {owner.name}
@@ -74,7 +70,7 @@ export function AppointmentDetailModal({
       </p>
       {appt.flaggedReason ? <p className="text-small">{appt.flaggedReason}</p> : null}
       {pet.needsPickup ? (
-        <p className="text-small">📍 {loc.address || "Ubicación faltante"}</p>
+        <p className="text-small">📍 {loc?.address || "Ubicación faltante"}</p>
       ) : null}
       <div className="modal-actions" style={{ justifyContent: "flex-start" }}>
         <a
