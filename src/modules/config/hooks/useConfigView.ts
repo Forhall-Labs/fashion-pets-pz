@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { mockData } from "@/modules/shared/mock-data";
+import { mockData } from "@/modules/shared/lib/mock-data";
 import type { BlackoutPeriod } from "@/modules/shared/types";
 
 let blackoutIdCounter = 100;

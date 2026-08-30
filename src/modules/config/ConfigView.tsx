@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDateShort } from "@/modules/shared/date-utils";
+import { formatDateShort } from "@/modules/shared/lib/date-utils";
 
 import { useConfigView } from "./hooks/useConfigView";
 

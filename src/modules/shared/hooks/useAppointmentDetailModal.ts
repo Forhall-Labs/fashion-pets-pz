@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 
-import { getAppointment, getOwner, getPet, petLocation } from "../selectors";
+import { getAppointment, getOwner, getPet, petLocation } from "../lib/selectors";
 import type { MockData } from "../types";
-import { whatsAppLinkForAppointment } from "../whatsapp";
+import { whatsAppLinkForAppointment } from "../lib/whatsapp";
 
 // Puerto de openAppointmentDetail() — solo lectura por ahora. Editar,
 // reprogramar y cancelar quedan para la próxima etapa (necesitan mutaciones

@@ -8,12 +8,12 @@ import {
   IncompleteBadge,
   PickupBadge,
   SizeBadge,
-} from "@/modules/shared/Badge";
-import { formatDateShort } from "@/modules/shared/date-utils";
-import { DAY_LABEL } from "@/modules/shared/labels";
-import { isIncomplete } from "@/modules/shared/selectors";
-import { AppointmentDetailModal } from "@/modules/shared/AppointmentDetailModal";
-import { mockData } from "@/modules/shared/mock-data";
+} from "@/modules/shared/components/Badge";
+import { formatDateShort } from "@/modules/shared/lib/date-utils";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
+import { isIncomplete } from "@/modules/shared/lib/selectors";
+import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
+import { mockData } from "@/modules/shared/lib/mock-data";
 
 import { useOwnerDetail } from "./hooks/useOwnerDetail";
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { mockData } from "@/modules/shared/mock-data";
-import { getOwner, getPet, petLocation } from "@/modules/shared/selectors";
+import { mockData } from "@/modules/shared/lib/mock-data";
+import { getOwner, getPet, petLocation } from "@/modules/shared/lib/selectors";
 
 import { usePickupsView } from "./hooks/usePickupsView";
 

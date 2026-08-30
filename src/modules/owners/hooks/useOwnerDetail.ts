@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
+import { mockData, TODAY_ISO } from "@/modules/shared/lib/mock-data";
 import {
   getOwner,
   getPet,
   petsOfOwner,
   upcomingAppointmentsForOwner,
-} from "@/modules/shared/selectors";
-import { whatsAppLinkForAllUpcoming } from "@/modules/shared/whatsapp";
+} from "@/modules/shared/lib/selectors";
+import { whatsAppLinkForAllUpcoming } from "@/modules/shared/lib/whatsapp";
 
 // Puerto de "Ficha del Dueño" (renderOwnerDetail() en app.js). Editar
 // dueño/mascota (modales/formularios) queda para la próxima etapa.

@@ -9,8 +9,8 @@ import {
   formatDateShort,
   fromISODate,
   toISODate,
-} from "@/modules/shared/date-utils";
-import { TODAY_ISO } from "@/modules/shared/mock-data";
+} from "@/modules/shared/lib/date-utils";
+import { TODAY_ISO } from "@/modules/shared/lib/mock-data";
 
 export type CalView = "day" | "week" | "month" | "year";
 

@@ -3,7 +3,7 @@
 // leer un `db` global (más fácil de testear y de reemplazar por queries reales).
 
 import { fromISODate } from "./date-utils";
-import type { Appointment, MockData, Pet } from "./types";
+import type { Appointment, MockData, Pet } from "../types";
 
 export function getOwner(data: MockData, id: string) {
   return data.owners.find((o) => o.id === id);

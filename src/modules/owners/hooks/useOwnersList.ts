@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { mockData } from "@/modules/shared/mock-data";
-import { petsOfOwner } from "@/modules/shared/selectors";
+import { mockData } from "@/modules/shared/lib/mock-data";
+import { petsOfOwner } from "@/modules/shared/lib/selectors";
 
 // Puerto de la pantalla "Dueños — Lista" (renderOwnersList() en app.js).
 export function useOwnersList() {

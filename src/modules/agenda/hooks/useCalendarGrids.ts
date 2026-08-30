@@ -7,8 +7,8 @@ import {
   minutesToTime,
   timeToMinutes,
   toISODate,
-} from "@/modules/shared/date-utils";
-import { appointmentsOnDate, getPet, isBlackoutDate } from "@/modules/shared/selectors";
+} from "@/modules/shared/lib/date-utils";
+import { appointmentsOnDate, getPet, isBlackoutDate } from "@/modules/shared/lib/selectors";
 import type { MockData } from "@/modules/shared/types";
 
 export const MONTH_WEEKDAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];

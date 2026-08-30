@@ -1,4 +1,4 @@
-import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType, Weekday } from "./types";
+import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType, Weekday } from "../types";
 
 export const SIZE_LABEL: Record<PetSize, string> = {
   small: "Pequeño",

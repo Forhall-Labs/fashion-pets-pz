@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { haversineKm } from "@/modules/shared/date-utils";
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
-import { getPet, petLocation } from "@/modules/shared/selectors";
+import { haversineKm } from "@/modules/shared/lib/date-utils";
+import { mockData, TODAY_ISO } from "@/modules/shared/lib/mock-data";
+import { getPet, petLocation } from "@/modules/shared/lib/selectors";
 import type { Appointment } from "@/modules/shared/types";
 
 interface RouteStop {

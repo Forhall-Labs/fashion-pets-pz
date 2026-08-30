@@ -1,7 +1,7 @@
 "use client";
 
-import { SizeBadge } from "@/modules/shared/Badge";
-import { formatDateShort } from "@/modules/shared/date-utils";
+import { SizeBadge } from "@/modules/shared/components/Badge";
+import { formatDateShort } from "@/modules/shared/lib/date-utils";
 
 import { useWaitingListView } from "./hooks/useWaitingListView";
 

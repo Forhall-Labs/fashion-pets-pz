@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { AppointmentDetailModal } from "@/modules/shared/AppointmentDetailModal";
-import { mockData } from "@/modules/shared/mock-data";
+import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
+import { mockData } from "@/modules/shared/lib/mock-data";
 
 import { DayWeekGrid, MonthGrid, YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";

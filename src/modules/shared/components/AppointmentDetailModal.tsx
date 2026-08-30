@@ -8,10 +8,10 @@ import {
   SizeBadge,
   StatusBadge,
 } from "./Badge";
-import { formatDateLong } from "./date-utils";
+import { formatDateLong } from "../lib/date-utils";
 import { Modal, ModalHeader } from "./Modal";
-import type { MockData } from "./types";
-import { useAppointmentDetailModal } from "./hooks/useAppointmentDetailModal";
+import type { MockData } from "../types";
+import { useAppointmentDetailModal } from "../hooks/useAppointmentDetailModal";
 
 interface AppointmentDetailModalProps {
   data: MockData;

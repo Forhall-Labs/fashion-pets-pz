@@ -1,7 +1,7 @@
 "use client";
 
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
-import { daysBetween, getOwner, getPet } from "@/modules/shared/selectors";
+import { mockData, TODAY_ISO } from "@/modules/shared/lib/mock-data";
+import { daysBetween, getOwner, getPet } from "@/modules/shared/lib/selectors";
 
 // Puerto de la pantalla "Lista de Espera" (renderWaitingList() en app.js).
 export function useWaitingListView() {

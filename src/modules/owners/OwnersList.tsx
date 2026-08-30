@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { DAY_LABEL } from "@/modules/shared/labels";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
 
 import { useOwnersList } from "./hooks/useOwnersList";
 
