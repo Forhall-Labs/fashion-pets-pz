@@ -2,7 +2,7 @@
 // Reemplazar por llamadas a la API real cuando exista el backend NestJS.
 
 import { addDays, toISODate } from "./date-utils";
-import type { MockData } from "./types";
+import type { MockData } from "../types";
 
 export const TODAY_ISO = toISODate(new Date());
 

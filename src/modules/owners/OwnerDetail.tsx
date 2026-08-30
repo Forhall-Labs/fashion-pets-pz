@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
 import {
   AggressiveBadge,
@@ -9,25 +8,20 @@ import {
   IncompleteBadge,
   PickupBadge,
   SizeBadge,
-} from "@/modules/shared/Badge";
-import { formatDateShort } from "@/modules/shared/date-utils";
-import { DAY_LABEL } from "@/modules/shared/labels";
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
-import {
-  getOwner,
-  getPet,
-  isIncomplete,
-  petsOfOwner,
-  upcomingAppointmentsForOwner,
-} from "@/modules/shared/selectors";
-import { AppointmentDetailModal } from "@/modules/shared/AppointmentDetailModal";
-import { whatsAppLinkForAllUpcoming } from "@/modules/shared/whatsapp";
+} from "@/modules/shared/components/Badge";
+import { formatDateShort } from "@/modules/shared/lib/date-utils";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
+import { isIncomplete } from "@/modules/shared/lib/selectors";
+import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
+import { mockData } from "@/modules/shared/lib/mock-data";
+
+import { useOwnerDetail } from "./hooks/useOwnerDetail";
 
 // Puerto de "Ficha del Dueño" (renderOwnerDetail() en app.js). Editar
 // dueño/mascota (modales/formularios) queda para la próxima etapa.
 export function OwnerDetail({ ownerId }: { ownerId: string }) {
-  const [openAppointmentId, setOpenAppointmentId] = useState<string | null>(null);
-  const owner = getOwner(mockData, ownerId);
+  const { owner, pets, upcoming, waLink, openAppointmentId, openAppointment, closeAppointment } =
+    useOwnerDetail(ownerId);
 
   if (!owner) {
     return (
@@ -41,10 +35,6 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
       </section>
     );
   }
-
-  const pets = petsOfOwner(mockData, owner.id);
-  const upcoming = upcomingAppointmentsForOwner(mockData, owner.id, TODAY_ISO);
-  const waLink = whatsAppLinkForAllUpcoming(mockData, owner, TODAY_ISO);
 
   return (
     <section className="screen" data-screen="owner-detail">
@@ -89,21 +79,18 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
               <h3 className="text-h3" style={{ marginTop: 16 }}>
                 Próximas citas
               </h3>
-              {upcoming.map((a) => {
-                const pet = getPet(mockData, a.petId)!;
-                return (
-                  <div
-                    className="data-row"
-                    style={{ padding: "8px 10px", cursor: "pointer" }}
-                    key={a.id}
-                    onClick={() => setOpenAppointmentId(a.id)}
-                  >
-                    <span className="text-small">
-                      {pet.name} · {formatDateShort(a.date)} {a.startTime}
-                    </span>
-                  </div>
-                );
-              })}
+              {upcoming.map((a) => (
+                <div
+                  className="data-row"
+                  style={{ padding: "8px 10px", cursor: "pointer" }}
+                  key={a.id}
+                  onClick={() => openAppointment(a.id)}
+                >
+                  <span className="text-small">
+                    {a.pet.name} · {formatDateShort(a.date)} {a.startTime}
+                  </span>
+                </div>
+              ))}
             </>
           ) : (
             <p className="text-small" style={{ marginTop: 16 }}>
@@ -159,7 +146,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
         <AppointmentDetailModal
           data={mockData}
           appointmentId={openAppointmentId}
-          onClose={() => setOpenAppointmentId(null)}
+          onClose={closeAppointment}
         />
       ) : null}
     </section>

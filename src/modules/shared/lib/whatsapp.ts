@@ -3,7 +3,7 @@
 // dentro de WhatsApp. Puerto de docs/prototype/app.js.
 
 import { digitsOnly, formatDateLong } from "./date-utils";
-import type { Appointment, MockData, Owner, Pet } from "./types";
+import type { Appointment, MockData, Owner, Pet } from "../types";
 import { petsOfOwner } from "./selectors";
 
 export function whatsAppLinkForAppointment(appt: Appointment, pet: Pet, owner: Owner) {

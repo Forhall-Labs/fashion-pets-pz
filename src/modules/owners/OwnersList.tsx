@@ -1,21 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
-import { DAY_LABEL } from "@/modules/shared/labels";
-import { mockData } from "@/modules/shared/mock-data";
-import { petsOfOwner } from "@/modules/shared/selectors";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
+
+import { useOwnersList } from "./hooks/useOwnersList";
 
 // Puerto de la pantalla "Dueños — Lista" (renderOwnersList() en app.js).
 // Crear dueño (modal) queda para la próxima etapa.
 export function OwnersList() {
-  const [query, setQuery] = useState("");
-
-  const q = query.trim().toLowerCase();
-  const owners = mockData.owners.filter(
-    (o) => !q || o.name.toLowerCase().includes(q) || o.phone.includes(q),
-  );
+  const { query, setQuery, owners } = useOwnersList();
 
   return (
     <section className="screen" data-screen="owners">
@@ -39,25 +33,22 @@ export function OwnersList() {
             <span className="empty-state-icon">🔍</span>No se encontraron dueños.
           </div>
         ) : (
-          owners.map((o) => {
-            const petCount = petsOfOwner(mockData, o.id).length;
-            return (
-              <Link href={`/owners/${o.id}`} className="data-row" key={o.id}>
-                <div className="data-row-main">
-                  <strong>{o.name}</strong>
-                  <span className="text-small">{o.phone}</span>
-                </div>
-                <div className="data-row-meta">
-                  {o.fixedVisitDay ? (
-                    <span className="badge badge-size">Día fijo: {DAY_LABEL[o.fixedVisitDay]}</span>
-                  ) : null}
-                  <span className="text-small">
-                    {petCount} mascota{petCount === 1 ? "" : "s"}
-                  </span>
-                </div>
-              </Link>
-            );
-          })
+          owners.map((o) => (
+            <Link href={`/owners/${o.id}`} className="data-row" key={o.id}>
+              <div className="data-row-main">
+                <strong>{o.name}</strong>
+                <span className="text-small">{o.phone}</span>
+              </div>
+              <div className="data-row-meta">
+                {o.fixedVisitDay ? (
+                  <span className="badge badge-size">Día fijo: {DAY_LABEL[o.fixedVisitDay]}</span>
+                ) : null}
+                <span className="text-small">
+                  {o.petCount} mascota{o.petCount === 1 ? "" : "s"}
+                </span>
+              </div>
+            </Link>
+          ))
         )}
       </div>
     </section>

@@ -1,5 +1,5 @@
-import { FREQ_LABEL, SERVICE_LABEL, SIZE_LABEL, STATUS_LABEL } from "./labels";
-import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType } from "./types";
+import { FREQ_LABEL, SERVICE_LABEL, SIZE_LABEL, STATUS_LABEL } from "../lib/labels";
+import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType } from "../types";
 
 export function SizeBadge({ size }: { size: PetSize }) {
   return <span className="badge badge-size">{SIZE_LABEL[size]}</span>;
