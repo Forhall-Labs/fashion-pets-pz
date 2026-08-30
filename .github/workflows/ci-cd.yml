@@ -44,21 +44,26 @@ jobs:
     needs: checks
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+    # Maps GitHub environment names safely based on branches
+    environment: >-
+      ${{ github.ref_name == 'main' && 'production' || 
+          (github.ref_name == 'stage' && 'preview' || 'development') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Maps your distinct branches to Vercel's 3 runtime tracks
       - name: Resolve Vercel target from branch
         id: target
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "target=production" >> "$GITHUB_OUTPUT"
-          else
+          elif [ "${{ github.ref_name }}" = "stage" ]; then
             echo "target=preview" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=development" >> "$GITHUB_OUTPUT"
           fi
 
-      # Consolidating environment variables inside steps ensures clean string evaluation
       - name: Check Vercel secrets are configured
         id: secrets_check
         run: |
@@ -73,7 +78,7 @@ jobs:
         if: steps.secrets_check.outputs.missing == '0'
         run: npm install --global vercel@latest
 
-      # FIXED: Added the --git-branch flag for pulling variables safely
+      # Pulls correct variables using explicit environment mapping and branch scoping
       - name: Pull Vercel project settings
         if: steps.secrets_check.outputs.missing == '0'
         run: >
