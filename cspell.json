@@ -4,6 +4,7 @@
   "import": ["@cspell/dict-es-es/cspell-ext.json"],
   "dictionaries": ["typescript", "node", "npm", "css", "html", "softwareTerms", "fonts", "es-es"],
   "words": [
+    "onrender",
     "Nextjs",
     "NestJS",
     "Prisma",
@@ -94,7 +95,17 @@
     "Probá",
     "Intentá",
     "intentá",
-    "Revisá"
+    "Revisá",
+    "matchea",
+    "matchean",
+    "contrafase",
+    "lottie",
+    "Syed",
+    "Asim",
+    "Confirmás",
+    "querés",
+    "Seleccioná",
+    "instanciarlo"
   ],
   "ignorePaths": [
     "node_modules",
@@ -108,6 +119,7 @@
     "docs/**/*.pdf",
     "docs/**/*.xlsx",
     "public",
-    "*.svg"
+    "*.svg",
+    "src/modules/shared/assets/*-lottie.json"
   ]
 }
