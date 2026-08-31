@@ -21,7 +21,11 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  // Supabase Auth (signInWithPassword/getSession/signOut — the frontend never
+  // queries tables directly, see src/modules/shared/lib/supabase-client.ts).
+  // localhost:3001 is the NestJS API in local dev; once it's deployed, add its
+  // real origin here too (it isn't yet — no Render URL exists at time of writing).
+  `connect-src 'self' https://*.supabase.co${isDev ? " http://localhost:3001" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -1,7 +1,9 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { supabase } from "@/modules/shared/lib/supabase-client";
 
 export const NAV_LINKS = [
   { href: "/agenda", label: "Agenda" },
@@ -15,6 +17,24 @@ export function useAppShell() {
   const pathname = usePathname();
   const router = useRouter();
   const [navOpen, setNavOpen] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      setCheckingSession(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   function isActive(href: string) {
     return pathname === href || (href !== "/agenda" && pathname.startsWith(href));
@@ -28,9 +48,10 @@ export function useAppShell() {
     setNavOpen((v) => !v);
   }
 
-  function logout() {
+  async function logout() {
+    await supabase.auth.signOut();
     router.push("/login");
   }
 
-  return { navOpen, isActive, closeNav, toggleNav, logout };
+  return { navOpen, checkingSession, isActive, closeNav, toggleNav, logout };
 }

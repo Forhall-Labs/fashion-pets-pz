@@ -1,44 +1,44 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { supabase } from "@/modules/shared/lib/supabase-client";
 
 import { translateAuthError } from "../lib/auth-errors";
 
-export function useLoginForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState("admin@peluqueria.com");
-  const [password, setPassword] = useState("");
+export function useForgotPasswordForm() {
+  const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email) return;
 
     setSubmitting(true);
     setError(null);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
 
-    if (signInError) {
-      setError(translateAuthError(signInError));
-      setSubmitting(false);
+    setSubmitting(false);
+
+    if (resetError) {
+      setError(translateAuthError(resetError));
       return;
     }
 
-    router.push("/agenda");
+    setSent(true);
   }
 
   return {
     email,
     setEmail,
-    password,
-    setPassword,
     submitting,
     error,
+    sent,
     clearError: () => setError(null),
     handleSubmit,
   };

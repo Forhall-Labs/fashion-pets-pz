@@ -8,6 +8,7 @@
     "NestJS",
     "Prisma",
     "Supabase",
+    "supabase",
     "Nominatim",
     "tailwindcss",
     "shadcn",
@@ -28,6 +29,7 @@
     "reprogramar",
     "cerrable",
     "bloqueante",
+    "bloqueantes",
     "regenerá",
     "enviás",
     "eliminable",
@@ -85,7 +87,14 @@
     "configurarlos",
     "GHAS",
     "deployan",
-    "deploya"
+    "deploya",
+    "elif",
+    "matchear",
+    "logueado",
+    "Probá",
+    "Intentá",
+    "intentá",
+    "Revisá"
   ],
   "ignorePaths": [
     "node_modules",
