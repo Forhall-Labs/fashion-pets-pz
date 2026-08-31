@@ -13,7 +13,10 @@ import { ownersApi, type OwnerInput } from "@/modules/shared/lib/owners-api";
 import type { Owner, Weekday } from "@/modules/shared/types";
 
 type Conflict =
-  { type: "duplicate"; existing: Owner } | { type: "shared-phone"; existing: Owner } | null;
+  | { type: "duplicate"; existing: Owner }
+  | { type: "shared-phone"; existing: Owner }
+  | { type: "same-name"; existing: Owner }
+  | null;
 
 interface UseOwnerFormArgs {
   owner?: Owner | null;
@@ -89,6 +92,14 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
       const samePhone = existingOwners.find((o) => digitsOnly(o.phone) === phoneDigits);
       if (samePhone) {
         setConflict({ type: "shared-phone", existing: samePhone });
+        return;
+      }
+      // No es una regla de la HU original — pedida explícitamente después:
+      // dos dueños con el mismo nombre (aunque el teléfono sea distinto) no
+      // debería poder pasar sin avisar.
+      const sameName = existingOwners.find((o) => o.name.trim().toLowerCase() === trimmedName);
+      if (sameName) {
+        setConflict({ type: "same-name", existing: sameName });
         return;
       }
     }

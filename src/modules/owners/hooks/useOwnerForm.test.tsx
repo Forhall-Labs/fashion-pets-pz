@@ -139,6 +139,30 @@ describe("useOwnerForm", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("warns when the name matches an existing owner even with a different phone", async () => {
+    const { result } = renderHook(
+      () => useOwnerForm({ existingOwners: [EXISTING], onClose: vi.fn() }),
+      { wrapper: createWrapper() },
+    );
+
+    act(() => {
+      result.current.setValue("name", EXISTING.name);
+      result.current.setValue("phone", "011-0000-1111");
+    });
+    await act(async () => {
+      await result.current.handleSubmit(fakeSubmitEvent());
+    });
+
+    expect(result.current.conflict).toEqual({ type: "same-name", existing: EXISTING });
+    expect(create).not.toHaveBeenCalled();
+
+    create.mockResolvedValue({ ...EXISTING, id: "new" });
+    await act(async () => {
+      result.current.confirmConflict();
+    });
+    await waitFor(() => expect(create).toHaveBeenCalled());
+  });
+
   it("cancelling a conflict does not create the owner", async () => {
     const { result } = renderHook(
       () => useOwnerForm({ existingOwners: [EXISTING], onClose: vi.fn() }),
