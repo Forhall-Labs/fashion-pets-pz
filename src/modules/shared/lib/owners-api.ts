@@ -67,8 +67,12 @@ export const ownersApi = {
       .get<Page<OwnerRecord>>(`/owners${toQueryString(params)}`)
       .then((page) => ({ ...page, data: page.data.map(toOwnerListItem) })),
   get: (id: string) => apiClient.get<OwnerRecord>(`/owners/${id}`).then(toOwner),
-  create: (input: OwnerInput) =>
-    apiClient.post<OwnerRecord>("/owners", toBody(input)).then(toOwner),
+  create: (input: OwnerInput, idempotencyKey: string) =>
+    apiClient
+      .post<OwnerRecord>("/owners", toBody(input), {
+        headers: { "Idempotency-Key": idempotencyKey },
+      })
+      .then(toOwner),
   update: (id: string, input: OwnerInput) =>
     apiClient.patch<OwnerRecord>(`/owners/${id}`, toBody(input)).then(toOwner),
 };

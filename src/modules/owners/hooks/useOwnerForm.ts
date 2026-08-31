@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { digitsOnly } from "@/modules/shared/lib/date-utils";
 import { translateApiError } from "@/modules/shared/lib/api-errors";
+import { ownerFormSchema, type OwnerFormValues } from "@/modules/shared/lib/owner-schema";
 import { ownersApi, type OwnerInput } from "@/modules/shared/lib/owners-api";
 import type { Owner, Weekday } from "@/modules/shared/types";
 
@@ -24,27 +27,37 @@ interface UseOwnerFormArgs {
   onClose: () => void;
 }
 
-const PHONE_MIN_DIGITS = 7;
-const PHONE_MAX_DIGITS = 15;
-const NAME_MAX_LENGTH = 300;
-
 export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }: UseOwnerFormArgs) {
   const editing = owner != null;
   const router = useRouter();
   const queryClient = useQueryClient();
+  // Estable durante toda la sesión de este form (una key nueva por
+  // apertura, no por cada intento de submit) — así un reintento manual
+  // después de un timeout/confirmación perdida no crea un dueño duplicado.
+  const idempotencyKey = useRef(crypto.randomUUID()).current;
 
-  const [name, setName] = useState(owner?.name ?? "");
-  const [phone, setPhone] = useState(owner?.phone ?? "");
-  const [address, setAddress] = useState(owner?.address ?? "");
-  const [fixedVisitDay, setFixedVisitDay] = useState<Weekday | "">(owner?.fixedVisitDay ?? "");
-  const [nameError, setNameError] = useState(false);
-  const [phoneError, setPhoneError] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setValue,
+    formState: { errors },
+  } = useForm<OwnerFormValues>({
+    resolver: zodResolver(ownerFormSchema),
+    defaultValues: {
+      name: owner?.name ?? "",
+      phone: owner?.phone ?? "",
+      address: owner?.address ?? "",
+      fixedVisitDay: owner?.fixedVisitDay ?? "",
+    },
+  });
+
   const [conflict, setConflict] = useState<Conflict>(null);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: (input: OwnerInput) =>
-      editing ? ownersApi.update(owner.id, input) : ownersApi.create(input),
+      editing ? ownersApi.update(owner.id, input) : ownersApi.create(input, idempotencyKey),
     onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ["owners"] });
       onSaved?.(saved);
@@ -53,31 +66,21 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
     onError: (err: unknown) => setError(translateApiError(err)),
   });
 
-  function buildInput(): OwnerInput {
+  function buildInput(values: OwnerFormValues): OwnerInput {
     return {
-      name: name.trim(),
-      phone: phone.trim(),
-      address: address.trim() || null,
-      fixedVisitDay: fixedVisitDay || null,
+      name: values.name.trim(),
+      phone: values.phone.trim(),
+      address: values.address.trim() || null,
+      fixedVisitDay: (values.fixedVisitDay || null) as Weekday | null,
     };
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmedName = name.trim();
-    const phoneDigits = digitsOnly(phone);
-    const nameInvalid = !trimmedName || trimmedName.length > NAME_MAX_LENGTH;
-    const phoneInvalid =
-      phoneDigits.length < PHONE_MIN_DIGITS || phoneDigits.length > PHONE_MAX_DIGITS;
-    setNameError(nameInvalid);
-    setPhoneError(phoneInvalid);
-    if (nameInvalid || phoneInvalid) return;
-
+  function onValid(values: OwnerFormValues) {
     if (!editing) {
+      const phoneDigits = digitsOnly(values.phone);
+      const trimmedName = values.name.trim().toLowerCase();
       const dup = existingOwners.find(
-        (o) =>
-          o.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
-          digitsOnly(o.phone) === phoneDigits,
+        (o) => o.name.trim().toLowerCase() === trimmedName && digitsOnly(o.phone) === phoneDigits,
       );
       if (dup) {
         setConflict({ type: "duplicate", existing: dup });
@@ -89,15 +92,14 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
         return;
       }
     }
-
     setError(null);
-    mutation.mutate(buildInput());
+    mutation.mutate(buildInput(values));
   }
 
   function confirmConflict() {
     setConflict(null);
     setError(null);
-    mutation.mutate(buildInput());
+    mutation.mutate(buildInput(getValues()));
   }
 
   function openExisting(id: string) {
@@ -107,16 +109,9 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
 
   return {
     editing,
-    name,
-    setName,
-    phone,
-    setPhone,
-    address,
-    setAddress,
-    fixedVisitDay,
-    setFixedVisitDay,
-    nameError,
-    phoneError,
+    register,
+    errors,
+    setValue,
     submitting: mutation.isPending,
     error,
     clearError: () => setError(null),
@@ -124,6 +119,6 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
     cancelConflict: () => setConflict(null),
     confirmConflict,
     openExisting,
-    handleSubmit,
+    handleSubmit: handleSubmit(onValid),
   };
 }

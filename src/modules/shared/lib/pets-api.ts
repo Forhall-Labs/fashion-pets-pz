@@ -75,7 +75,12 @@ export const petsApi = {
     apiClient
       .get<Page<PetRecord>>(`/pets${toQueryString(params)}`)
       .then((page) => ({ ...page, data: page.data.map(toPet) })),
-  create: (input: PetInput) => apiClient.post<PetRecord>("/pets", toBody(input)).then(toPet),
+  create: (input: PetInput, idempotencyKey: string) =>
+    apiClient
+      .post<PetRecord>("/pets", toBody(input), {
+        headers: { "Idempotency-Key": idempotencyKey },
+      })
+      .then(toPet),
   update: (id: string, input: PetInput) =>
     apiClient.patch<PetRecord>(`/pets/${id}`, toBody(input)).then(toPet),
 };

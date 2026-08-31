@@ -4,7 +4,7 @@ import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { DAY_LABEL, DAY_OPTIONS } from "@/modules/shared/lib/labels";
-import type { Owner, Weekday } from "@/modules/shared/types";
+import type { Owner } from "@/modules/shared/types";
 
 import { useOwnerForm } from "./hooks/useOwnerForm";
 
@@ -21,16 +21,8 @@ interface OwnerFormProps {
 export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: OwnerFormProps) {
   const {
     editing,
-    name,
-    setName,
-    phone,
-    setPhone,
-    address,
-    setAddress,
-    fixedVisitDay,
-    setFixedVisitDay,
-    nameError,
-    phoneError,
+    register,
+    errors,
     submitting,
     error,
     clearError,
@@ -69,8 +61,8 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
       <Modal onClose={cancelConflict} blocking>
         <ModalHeader title="Teléfono ya registrado" />
         <p className="modal-body-text">
-          El teléfono {phone} ya está asociado a <strong>{conflict.existing.name}</strong>. ¿Es un
-          teléfono compartido del hogar o un error?
+          El teléfono ya está asociado a <strong>{conflict.existing.name}</strong>. ¿Es un teléfono
+          compartido del hogar o un error?
         </p>
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={cancelConflict}>
@@ -89,28 +81,24 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
       <Modal onClose={onClose}>
         <ModalHeader title={editing ? "Editar dueño" : "Nuevo dueño"} onClose={onClose} />
         <form onSubmit={handleSubmit}>
-          <div className={`field ${nameError ? "has-error" : ""}`}>
+          <div className={`field ${errors.name ? "has-error" : ""}`}>
             <label htmlFor="of-name">Nombre</label>
-            <input id="of-name" value={name} onChange={(e) => setName(e.target.value)} />
-            <span className="error-msg">El nombre es obligatorio (máximo 300 caracteres).</span>
+            <input id="of-name" {...register("name")} />
+            <span className="error-msg">{errors.name?.message}</span>
           </div>
-          <div className={`field ${phoneError ? "has-error" : ""}`}>
+          <div className={`field ${errors.phone ? "has-error" : ""}`}>
             <label htmlFor="of-phone">Teléfono</label>
-            <input id="of-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            <span className="error-msg">Ingresá un teléfono válido (7 a 15 dígitos).</span>
+            <input id="of-phone" {...register("phone")} />
+            <span className="error-msg">{errors.phone?.message}</span>
           </div>
           <div className="field">
             <label htmlFor="of-address">Dirección</label>
-            <input id="of-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+            <input id="of-address" {...register("address")} />
             <span className="hint">Se usa como ubicación por defecto de sus mascotas.</span>
           </div>
           <div className="field">
             <label htmlFor="of-day">Día fijo de visita</label>
-            <select
-              id="of-day"
-              value={fixedVisitDay}
-              onChange={(e) => setFixedVisitDay(e.target.value as Weekday | "")}
-            >
+            <select id="of-day" {...register("fixedVisitDay")}>
               <option value="">Sin preferencia</option>
               {DAY_OPTIONS.map((d) => (
                 <option key={d} value={d}>
