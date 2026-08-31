@@ -7,6 +7,7 @@ import {
   AggressiveBadge,
   FrequencyBadge,
   IncompleteBadge,
+  LocationMissingBadge,
   PickupBadge,
   SizeBadge,
 } from "@/modules/shared/components/Badge";
@@ -157,26 +158,34 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
             {pets.length === 0 ? (
               <div className="empty-state">Sin mascotas todavía.</div>
             ) : (
-              pets.map((p) => (
-                <div className="card pet-card" key={p.id}>
-                  <div className="pet-card-main">
-                    <strong>{p.name}</strong>
-                    <span className="text-small">{p.breed}</span>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                      <SizeBadge size={p.size} />
-                      {p.isAggressive ? <AggressiveBadge /> : null}
-                      {p.needsPickup ? <PickupBadge /> : null}
-                      {isIncomplete(p) ? <IncompleteBadge /> : null}
-                      {p.groomingFrequency ? (
-                        <FrequencyBadge frequency={p.groomingFrequency} />
-                      ) : null}
+              pets.map((p) => {
+                const resolvedLocation = p.locationAddress || owner.address;
+                const locationMissing = p.needsPickup && !resolvedLocation;
+                return (
+                  <div className="card pet-card" key={p.id}>
+                    <div className="pet-card-main">
+                      <strong>{p.name}</strong>
+                      <span className="text-small">{p.breed}</span>
+                      <span className="text-small">
+                        Ubicación: {resolvedLocation || "Sin ubicación"}
+                      </span>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                        <SizeBadge size={p.size} />
+                        {p.isAggressive ? <AggressiveBadge /> : null}
+                        {p.needsPickup ? <PickupBadge /> : null}
+                        {isIncomplete(p) ? <IncompleteBadge /> : null}
+                        {locationMissing ? <LocationMissingBadge /> : null}
+                        {p.groomingFrequency ? (
+                          <FrequencyBadge frequency={p.groomingFrequency} />
+                        ) : null}
+                      </div>
                     </div>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setPetModal(p)}>
+                      Editar
+                    </button>
                   </div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setPetModal(p)}>
-                    Editar
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -197,6 +206,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
         <PetForm
           pet={petModal === "new" ? null : petModal}
           owner={owner}
+          existingPets={pets}
           onClose={() => setPetModal(null)}
         />
       )}

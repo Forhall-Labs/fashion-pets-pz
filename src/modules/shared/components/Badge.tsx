@@ -33,6 +33,10 @@ export function IncompleteBadge() {
   return <span className="badge badge-incomplete">Incompleto para agendar</span>;
 }
 
+export function LocationMissingBadge() {
+  return <span className="badge badge-incomplete">📍 Ubicación faltante</span>;
+}
+
 export function ExceptionBadge() {
   return <span className="badge badge-exception">Excepción de bloqueo</span>;
 }

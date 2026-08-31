@@ -12,6 +12,7 @@ import { usePetForm } from "./hooks/usePetForm";
 interface PetFormProps {
   pet?: Pet | null;
   owner: Owner;
+  existingPets: Pet[];
   onSaved?: (pet: Pet) => void;
   onClose: () => void;
 }
@@ -24,42 +25,33 @@ const FREQ_OPTIONS: GroomingFrequency[] = [
 ];
 
 // Puerto de openPetForm() (docs/prototype/app.js:762-860) — form de
-// creación/edición de mascota, con la confirmación de "es agresivo" y el
-// conflicto de frecuencia con citas futuras (HU-1.3).
-export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
+// creación/edición de mascota, con la confirmación de "es agresivo", el
+// aviso de nombre duplicado y el conflicto de frecuencia con citas futuras
+// (HU-1.3).
+export function PetForm({ pet = null, owner, existingPets, onSaved, onClose }: PetFormProps) {
   const {
     editing,
+    register,
+    errors,
     name,
-    setName,
-    breed,
-    setBreed,
-    size,
-    setSize,
     isAggressive,
     toggleAggressive,
-    needsPickup,
-    setNeedsPickup,
-    locationAddress,
-    setLocationAddress,
-    groomingFrequency,
-    setGroomingFrequency,
-    avgServiceDuration,
-    setAvgServiceDuration,
-    nameError,
-    breedError,
-    sizeError,
+    incomplete,
     submitting,
     error,
     clearError,
     stage,
     confirmAggressive,
     cancelAggressive,
+    duplicateName,
+    cancelDuplicateName,
+    confirmDuplicateName,
     futureAppointmentCount,
     keepAppointments,
     regenerateAppointments,
     cancelFrequencyConflict,
     handleSubmit,
-  } = usePetForm({ pet, ownerId: owner.id, onSaved, onClose });
+  } = usePetForm({ pet, ownerId: owner.id, existingPets, onSaved, onClose });
 
   if (stage === "aggressive-confirm") {
     return (
@@ -75,6 +67,26 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
           </button>
           <button className="btn btn-destructive" onClick={confirmAggressive}>
             Entendido, marcar como agresivo
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (stage === "duplicate-name") {
+    return (
+      <Modal onClose={cancelDuplicateName} blocking>
+        <ModalHeader title="Posible mascota duplicada" />
+        <p className="modal-body-text">
+          Ya existe una mascota llamada <strong>{duplicateName}</strong> para este dueño. ¿Confirmás
+          que es intencional?
+        </p>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={cancelDuplicateName}>
+            Cancelar
+          </button>
+          <button className="btn btn-primary" onClick={confirmDuplicateName}>
+            Guardar de todos modos
           </button>
         </div>
       </Modal>
@@ -102,8 +114,6 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
     );
   }
 
-  const incomplete = !groomingFrequency || !avgServiceDuration;
-
   return (
     <>
       <Modal onClose={onClose}>
@@ -113,20 +123,20 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
         />
         <form onSubmit={handleSubmit}>
           <div className="field-row">
-            <div className={`field ${nameError ? "has-error" : ""}`}>
+            <div className={`field ${errors.name ? "has-error" : ""}`}>
               <label htmlFor="pf-name">Nombre</label>
-              <input id="pf-name" value={name} onChange={(e) => setName(e.target.value)} />
-              <span className="error-msg">El nombre es obligatorio.</span>
+              <input id="pf-name" {...register("name")} />
+              <span className="error-msg">{errors.name?.message}</span>
             </div>
-            <div className={`field ${breedError ? "has-error" : ""}`}>
+            <div className={`field ${errors.breed ? "has-error" : ""}`}>
               <label htmlFor="pf-breed">Raza</label>
-              <input id="pf-breed" value={breed} onChange={(e) => setBreed(e.target.value)} />
-              <span className="error-msg">La raza es obligatoria.</span>
+              <input id="pf-breed" {...register("breed")} />
+              <span className="error-msg">{errors.breed?.message}</span>
             </div>
           </div>
-          <div className={`field ${sizeError ? "has-error" : ""}`}>
+          <div className={`field ${errors.size ? "has-error" : ""}`}>
             <label htmlFor="pf-size">Tamaño</label>
-            <select id="pf-size" value={size} onChange={(e) => setSize(e.target.value as PetSize)}>
+            <select id="pf-size" {...register("size")}>
               <option value="">Seleccioná un tamaño…</option>
               {SIZE_OPTIONS.map((s) => (
                 <option key={s} value={s}>
@@ -134,7 +144,7 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
                 </option>
               ))}
             </select>
-            <span className="error-msg">Elegí un tamaño.</span>
+            <span className="error-msg">{errors.size?.message}</span>
           </div>
           <div className="checkbox-field">
             <input
@@ -146,20 +156,14 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
             <label htmlFor="pf-aggressive">Es agresivo</label>
           </div>
           <div className="checkbox-field">
-            <input
-              type="checkbox"
-              id="pf-pickup"
-              checked={needsPickup}
-              onChange={(e) => setNeedsPickup(e.target.checked)}
-            />
+            <input type="checkbox" id="pf-pickup" {...register("needsPickup")} />
             <label htmlFor="pf-pickup">Necesita pickup</label>
           </div>
           <div className="field">
             <label htmlFor="pf-location">Ubicación</label>
             <input
               id="pf-location"
-              value={locationAddress}
-              onChange={(e) => setLocationAddress(e.target.value)}
+              {...register("locationAddress")}
               placeholder="Dejar vacío para usar la del dueño"
             />
             <span className="hint">Dueño: {owner.address || "sin dirección"}</span>
@@ -167,11 +171,7 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
           <div className="field-row">
             <div className="field">
               <label htmlFor="pf-freq">Frecuencia de grooming</label>
-              <select
-                id="pf-freq"
-                value={groomingFrequency}
-                onChange={(e) => setGroomingFrequency(e.target.value as GroomingFrequency | "")}
-              >
+              <select id="pf-freq" {...register("groomingFrequency")}>
                 <option value="">Sin definir</option>
                 {FREQ_OPTIONS.map((f) => (
                   <option key={f} value={f}>
@@ -182,13 +182,7 @@ export function PetForm({ pet = null, owner, onSaved, onClose }: PetFormProps) {
             </div>
             <div className="field">
               <label htmlFor="pf-duration">Duración promedio (min)</label>
-              <input
-                type="number"
-                id="pf-duration"
-                min={1}
-                value={avgServiceDuration}
-                onChange={(e) => setAvgServiceDuration(e.target.value)}
-              />
+              <input type="number" id="pf-duration" min={1} {...register("avgServiceDuration")} />
             </div>
           </div>
           {incomplete && (
