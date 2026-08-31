@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { PasswordInput } from "@/modules/shared/components/PasswordInput";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 
 import { useLoginForm } from "./hooks/useLoginForm";
 
@@ -50,7 +51,7 @@ export function LoginForm() {
           className={`btn btn-primary btn-block ${submitting ? "btn-loading" : ""}`}
           disabled={submitting}
         >
-          Ingresar
+          {submitting ? <PawPrintsSpinner /> : "Ingresar"}
         </button>
       </form>
       {error && (

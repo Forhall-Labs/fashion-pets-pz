@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
 import {
@@ -13,17 +14,40 @@ import { formatDateShort } from "@/modules/shared/lib/date-utils";
 import { DAY_LABEL } from "@/modules/shared/lib/labels";
 import { isIncomplete } from "@/modules/shared/lib/selectors";
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
+import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { mockData } from "@/modules/shared/lib/mock-data";
+import type { Pet } from "@/modules/shared/types";
 
+import { OwnerForm } from "./OwnerForm";
+import { PetForm } from "./PetForm";
 import { useOwnerDetail } from "./hooks/useOwnerDetail";
 
-// Puerto de "Ficha del Dueño" (renderOwnerDetail() en app.js). Editar
-// dueño/mascota (modales/formularios) queda para la próxima etapa.
+// Puerto de "Ficha del Dueño" (renderOwnerDetail() en app.js).
 export function OwnerDetail({ ownerId }: { ownerId: string }) {
-  const { owner, pets, upcoming, waLink, openAppointmentId, openAppointment, closeAppointment } =
-    useOwnerDetail(ownerId);
+  const {
+    owner,
+    pets,
+    upcoming,
+    waLink,
+    loading,
+    notFound,
+    error,
+    openAppointmentId,
+    openAppointment,
+    closeAppointment,
+  } = useOwnerDetail(ownerId);
+  const [editingOwner, setEditingOwner] = useState(false);
+  const [petModal, setPetModal] = useState<"new" | Pet | null>(null);
 
-  if (!owner) {
+  if (loading) {
+    return (
+      <section className="screen" data-screen="owner-detail">
+        <WalkingDogLoader />
+      </section>
+    );
+  }
+
+  if (notFound || (!owner && !error)) {
     return (
       <section className="screen" data-screen="owner-detail">
         <div className="screen-header">
@@ -32,6 +56,22 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
           </Link>
         </div>
         <div className="empty-state">Dueño no encontrado.</div>
+      </section>
+    );
+  }
+
+  if (error || !owner) {
+    return (
+      <section className="screen" data-screen="owner-detail">
+        <div className="screen-header">
+          <Link href="/owners" className="btn btn-ghost btn-sm">
+            ← Dueños
+          </Link>
+        </div>
+        <div className="empty-state">
+          <span className="empty-state-icon">⚠️</span>
+          {error}
+        </div>
       </section>
     );
   }
@@ -48,7 +88,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 className="text-h2">{owner.name}</h2>
-            <button className="btn btn-text btn-sm" disabled title="Próximamente">
+            <button className="btn btn-text btn-sm" onClick={() => setEditingOwner(true)}>
               Editar
             </button>
           </div>
@@ -109,7 +149,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
             }}
           >
             <h2 className="text-h2">Mascotas</h2>
-            <button className="btn btn-primary btn-sm" disabled title="Próximamente">
+            <button className="btn btn-primary btn-sm" onClick={() => setPetModal("new")}>
               + Agregar mascota
             </button>
           </div>
@@ -132,7 +172,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
                       ) : null}
                     </div>
                   </div>
-                  <button className="btn btn-ghost btn-sm" disabled title="Próximamente">
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPetModal(p)}>
                     Editar
                   </button>
                 </div>
@@ -149,6 +189,17 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
           onClose={closeAppointment}
         />
       ) : null}
+
+      {editingOwner && (
+        <OwnerForm owner={owner} existingOwners={[]} onClose={() => setEditingOwner(false)} />
+      )}
+      {petModal && (
+        <PetForm
+          pet={petModal === "new" ? null : petModal}
+          owner={owner}
+          onClose={() => setPetModal(null)}
+        />
+      )}
     </section>
   );
 }

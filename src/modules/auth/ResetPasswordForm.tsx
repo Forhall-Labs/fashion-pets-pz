@@ -2,6 +2,7 @@
 
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { PasswordInput } from "@/modules/shared/components/PasswordInput";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 
 import { useResetPasswordForm } from "./hooks/useResetPasswordForm";
 
@@ -53,7 +54,7 @@ export function ResetPasswordForm() {
           className={`btn btn-primary btn-block ${submitting ? "btn-loading" : ""}`}
           disabled={submitting}
         >
-          Guardar contraseña
+          {submitting ? <PawPrintsSpinner /> : "Guardar contraseña"}
         </button>
       </form>
       {error && (

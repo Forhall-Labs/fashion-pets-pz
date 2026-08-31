@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 
 import { useForgotPasswordForm } from "./hooks/useForgotPasswordForm";
 
@@ -51,7 +52,7 @@ export function ForgotPasswordForm() {
               className={`btn btn-primary btn-block ${submitting ? "btn-loading" : ""}`}
               disabled={submitting}
             >
-              Enviar link
+              {submitting ? <PawPrintsSpinner /> : "Enviar link"}
             </button>
             <Link
               href="/login"

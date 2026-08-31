@@ -94,7 +94,17 @@
     "Probá",
     "Intentá",
     "intentá",
-    "Revisá"
+    "Revisá",
+    "matchea",
+    "matchean",
+    "contrafase",
+    "lottie",
+    "Syed",
+    "Asim",
+    "Confirmás",
+    "querés",
+    "Seleccioná",
+    "instanciarlo"
   ],
   "ignorePaths": [
     "node_modules",
@@ -108,6 +118,7 @@
     "docs/**/*.pdf",
     "docs/**/*.xlsx",
     "public",
-    "*.svg"
+    "*.svg",
+    "src/modules/shared/assets/*-lottie.json"
   ]
 }

@@ -6,6 +6,27 @@ import { supabase } from "./supabase-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+// Respuesta paginada estándar de GET /owners y GET /pets.
+export interface Page<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// Arma un query string a partir de params opcionales, omitiendo
+// undefined/"" — evita mandar "?q=&page=1" cuando no hay búsqueda.
+export function toQueryString<T extends Record<string, string | number | undefined>>(
+  params: T,
+): string {
+  const usp = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") usp.set(key, String(value));
+  }
+  const qs = usp.toString();
+  return qs ? `?${qs}` : "";
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
