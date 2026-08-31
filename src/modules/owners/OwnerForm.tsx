@@ -56,6 +56,29 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
     );
   }
 
+  if (conflict?.type === "same-name") {
+    return (
+      <Modal onClose={cancelConflict} blocking>
+        <ModalHeader title="Ya existe un dueño con ese nombre" />
+        <p className="modal-body-text">
+          Ya existe <strong>{conflict.existing.name}</strong> ({conflict.existing.phone}) con un
+          teléfono distinto. ¿Es la misma persona o son dos personas distintas?
+        </p>
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={() => openExisting(conflict.existing.id)}>
+            Abrir existente
+          </button>
+          <button className="btn btn-destructive" onClick={cancelConflict}>
+            Cancelar
+          </button>
+          <button className="btn btn-primary" onClick={confirmConflict}>
+            Es otra persona — guardar
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
   if (conflict?.type === "shared-phone") {
     return (
       <Modal onClose={cancelConflict} blocking>
