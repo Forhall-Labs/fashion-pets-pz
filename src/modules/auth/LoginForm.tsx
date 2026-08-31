@@ -1,10 +1,16 @@
 "use client";
 
+import Link from "next/link";
+
+import { ErrorModal } from "@/modules/shared/components/ErrorModal";
+import { PasswordInput } from "@/modules/shared/components/PasswordInput";
+
 import { useLoginForm } from "./hooks/useLoginForm";
 
 // Puerto de <section id="screen-login"> de docs/prototype/prototype.html.
 export function LoginForm() {
-  const { email, setEmail, password, setPassword, submitting, handleSubmit } = useLoginForm();
+  const { email, setEmail, password, setPassword, submitting, error, clearError, handleSubmit } =
+    useLoginForm();
 
   return (
     <section className="screen-login">
@@ -26,23 +32,30 @@ export function LoginForm() {
         </div>
         <div className="field">
           <label htmlFor="login-password">Contraseña</label>
-          <input
+          <PasswordInput
             id="login-password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Cualquier valor funciona (todavía)"
+            autoComplete="current-password"
             required
           />
+        </div>
+        <div style={{ textAlign: "right", marginBottom: "var(--space-3)" }}>
+          <Link href="/forgot-password" className="btn btn-text btn-sm">
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
         <button
           type="submit"
           className={`btn btn-primary btn-block ${submitting ? "btn-loading" : ""}`}
+          disabled={submitting}
         >
           Ingresar
         </button>
-        <p className="login-hint">Prototipo — cualquier valor funciona.</p>
       </form>
+      {error && (
+        <ErrorModal title="No se pudo iniciar sesión" message={error} onClose={clearError} />
+      )}
     </section>
   );
 }

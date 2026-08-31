@@ -8,10 +8,17 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
+const signInWithPassword = vi.fn();
+
+vi.mock("@/modules/shared/lib/supabase-client", () => ({
+  supabase: { auth: { signInWithPassword: (...args: unknown[]) => signInWithPassword(...args) } },
+}));
+
 const push = vi.fn();
 
 beforeEach(() => {
   push.mockClear();
+  signInWithPassword.mockClear();
   vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
 });
 
@@ -26,24 +33,66 @@ describe("useLoginForm", () => {
     expect(result.current.email).toBe("admin@peluqueria.com");
     expect(result.current.password).toBe("");
     expect(result.current.submitting).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
-  it("does not navigate when the password is missing", () => {
+  it("does not call Supabase or navigate when the password is missing", async () => {
     const { result } = renderHook(() => useLoginForm());
 
-    act(() => result.current.handleSubmit(fakeSubmitEvent()));
+    await act(() => result.current.handleSubmit(fakeSubmitEvent()));
 
+    expect(signInWithPassword).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
     expect(result.current.submitting).toBe(false);
   });
 
-  it("navigates to /agenda and flips submitting once both fields are filled", () => {
+  it("navigates to /agenda once Supabase confirms the credentials", async () => {
+    signInWithPassword.mockResolvedValue({ error: null });
     const { result } = renderHook(() => useLoginForm());
 
-    act(() => result.current.setPassword("anything"));
-    act(() => result.current.handleSubmit(fakeSubmitEvent()));
+    act(() => result.current.setPassword("correct-password"));
+    await act(() => result.current.handleSubmit(fakeSubmitEvent()));
 
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: "admin@peluqueria.com",
+      password: "correct-password",
+    });
     expect(push).toHaveBeenCalledWith("/agenda");
-    expect(result.current.submitting).toBe(true);
+  });
+
+  it("surfaces a Spanish error message and stops submitting when Supabase rejects the credentials", async () => {
+    signInWithPassword.mockResolvedValue({
+      error: { code: "invalid_credentials", message: "Invalid login credentials" },
+    });
+    const { result } = renderHook(() => useLoginForm());
+
+    act(() => result.current.setPassword("wrong-password"));
+    await act(() => result.current.handleSubmit(fakeSubmitEvent()));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(result.current.submitting).toBe(false);
+    expect(result.current.error).toBe("Usuario o contraseña incorrectos.");
+  });
+
+  it("falls back to a generic Spanish message for an unmapped error", async () => {
+    signInWithPassword.mockResolvedValue({ error: { message: "Something unexpected" } });
+    const { result } = renderHook(() => useLoginForm());
+
+    act(() => result.current.setPassword("wrong-password"));
+    await act(() => result.current.handleSubmit(fakeSubmitEvent()));
+
+    expect(result.current.error).toBe("Ocurrió un error. Intentá de nuevo.");
+  });
+
+  it("clears the error via clearError", async () => {
+    signInWithPassword.mockResolvedValue({ error: { message: "Something unexpected" } });
+    const { result } = renderHook(() => useLoginForm());
+
+    act(() => result.current.setPassword("wrong-password"));
+    await act(() => result.current.handleSubmit(fakeSubmitEvent()));
+    expect(result.current.error).not.toBeNull();
+
+    act(() => result.current.clearError());
+    expect(result.current.error).toBeNull();
   });
 });

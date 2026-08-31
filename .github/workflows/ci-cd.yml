@@ -41,6 +41,14 @@ jobs:
 
       - name: Build (includes type-check)
         run: npm run build
+        env:
+          # Solo para que el build no falle al evaluar createClient() en
+          # tiempo de build (prerender de páginas que importan el shell) —
+          # este job no habla con Supabase de verdad. El deploy real usa las
+          # env vars reales configuradas en el proyecto de Vercel.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_API_URL: http://localhost:3001
 
   deploy:
     name: Deploy

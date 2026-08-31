@@ -9,7 +9,11 @@ import { NAV_LINKS, useAppShell } from "./hooks/useAppShell";
 // docs/prototype/prototype.html — la navegación real ahora la maneja
 // next/navigation en vez de mostrar/ocultar <section data-screen>.
 export function AppShell({ children }: { children: ReactNode }) {
-  const { navOpen, isActive, closeNav, toggleNav, logout } = useAppShell();
+  const { navOpen, checkingSession, isActive, closeNav, toggleNav, logout } = useAppShell();
+
+  if (checkingSession) {
+    return null;
+  }
 
   return (
     <div className="app-shell">
