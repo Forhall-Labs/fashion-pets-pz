@@ -4,6 +4,7 @@
   "import": ["@cspell/dict-es-es/cspell-ext.json"],
   "dictionaries": ["typescript", "node", "npm", "css", "html", "softwareTerms", "fonts", "es-es"],
   "words": [
+    "onrender",
     "Nextjs",
     "NestJS",
     "Prisma",
