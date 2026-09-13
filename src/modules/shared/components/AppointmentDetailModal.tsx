@@ -1,5 +1,7 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import {
   AggressiveBadge,
   ExceptionBadge,
@@ -10,34 +12,73 @@ import {
 } from "./Badge";
 import { formatDateLong } from "../lib/date-utils";
 import { Modal, ModalHeader } from "./Modal";
-import type { MockData } from "../types";
+import { WalkingDogLoader } from "./WalkingDogLoader";
+import { appointmentsApi } from "../lib/appointments-api";
 import { useAppointmentDetailModal } from "../hooks/useAppointmentDetailModal";
+import type { Appointment } from "../types";
 
 interface AppointmentDetailModalProps {
-  data: MockData;
   appointmentId: string;
   onClose: () => void;
+  onEdit?: (appt: Appointment) => void;
 }
 
-// Puerto de openAppointmentDetail() — solo lectura por ahora. Editar,
-// reprogramar y cancelar quedan para la próxima etapa (necesitan mutaciones
-// contra la API real, no mock local).
+// Puerto de openAppointmentDetail(), ahora contra la API real — ver
+// useAppointmentDetailModal.ts para el detalle de las 3 queries encadenadas
+// y cómo distinguen "no existe" de "error de red" por sección.
 export function AppointmentDetailModal({
-  data,
   appointmentId,
   onClose,
+  onEdit,
 }: AppointmentDetailModalProps) {
-  const { appt, pet, owner, loc, waLink, goToOwner } = useAppointmentDetailModal(
-    data,
-    appointmentId,
-    onClose,
-  );
+  const queryClient = useQueryClient();
+  const {
+    loading,
+    notFound,
+    loadError,
+    appt,
+    pet,
+    owner,
+    ownerSectionError,
+    loc,
+    waLink,
+    goToOwner,
+  } = useAppointmentDetailModal(appointmentId, onClose);
 
-  if (!appt || !pet || !owner) {
+  const cancelMutation = useMutation({
+    mutationFn: () => appointmentsApi.cancel(appointmentId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      onClose();
+    },
+  });
+
+  if (loading) {
+    return (
+      <Modal onClose={onClose}>
+        <ModalHeader title="Detalle de cita" onClose={onClose} />
+        <WalkingDogLoader />
+      </Modal>
+    );
+  }
+
+  if (notFound) {
     return (
       <Modal onClose={onClose}>
         <ModalHeader title="Detalle de cita" onClose={onClose} />
         <p className="modal-body-text">Esta cita ya no existe.</p>
+      </Modal>
+    );
+  }
+
+  if (loadError || !appt || !pet) {
+    return (
+      <Modal onClose={onClose}>
+        <ModalHeader title="Detalle de cita" onClose={onClose} />
+        <div className="empty-state">
+          <span className="empty-state-icon">⚠️</span>
+          No se pudo cargar la cita.
+        </div>
       </Modal>
     );
   }
@@ -55,15 +96,19 @@ export function AppointmentDetailModal({
       </div>
       <p>
         <strong>{pet.name}</strong> · dueño/a{" "}
-        <a
-          href={`/owners/${owner.id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            goToOwner();
-          }}
-        >
-          {owner.name}
-        </a>
+        {ownerSectionError ? (
+          <span className="text-small">no se pudo cargar</span>
+        ) : owner ? (
+          <a
+            href={`/owners/${owner.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              goToOwner();
+            }}
+          >
+            {owner.name}
+          </a>
+        ) : null}
       </p>
       <p className="text-small">
         {formatDateLong(appt.date)} · {appt.startTime} ({appt.durationMinutes} min)
@@ -89,7 +134,28 @@ export function AppointmentDetailModal({
       <p className="text-small" style={{ marginTop: 4 }}>
         Se abrirá WhatsApp con el mensaje listo — vos lo enviás.
       </p>
+      {cancelMutation.isError ? (
+        <p className="text-small" style={{ color: "var(--color-danger)" }}>
+          No se pudo cancelar la cita. Probá de nuevo.
+        </p>
+      ) : null}
       <div className="modal-actions">
+        {appt.status === "scheduled" ? (
+          <>
+            {onEdit ? (
+              <button className="btn btn-secondary" onClick={() => onEdit(appt)}>
+                Editar / Reprogramar
+              </button>
+            ) : null}
+            <button
+              className="btn btn-destructive"
+              onClick={() => cancelMutation.mutate()}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? "Cancelando…" : "Cancelar cita"}
+            </button>
+          </>
+        ) : null}
         <button className="btn btn-ghost" onClick={onClose}>
           Cerrar
         </button>

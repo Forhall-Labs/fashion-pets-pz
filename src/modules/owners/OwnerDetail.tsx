@@ -15,9 +15,9 @@ import { formatDateShort } from "@/modules/shared/lib/date-utils";
 import { DAY_LABEL } from "@/modules/shared/lib/labels";
 import { isIncomplete } from "@/modules/shared/lib/selectors";
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
+import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
-import { mockData } from "@/modules/shared/lib/mock-data";
-import type { Pet } from "@/modules/shared/types";
+import type { Appointment, Pet } from "@/modules/shared/types";
 
 import { OwnerForm } from "./OwnerForm";
 import { PetForm } from "./PetForm";
@@ -39,6 +39,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
   } = useOwnerDetail(ownerId);
   const [editingOwner, setEditingOwner] = useState(false);
   const [petModal, setPetModal] = useState<"new" | Pet | null>(null);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
   if (loading) {
     return (
@@ -193,9 +194,19 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
 
       {openAppointmentId ? (
         <AppointmentDetailModal
-          data={mockData}
           appointmentId={openAppointmentId}
           onClose={closeAppointment}
+          onEdit={(appt) => {
+            closeAppointment();
+            setEditingAppointment(appt);
+          }}
+        />
+      ) : null}
+
+      {editingAppointment ? (
+        <AppointmentForm
+          appointment={editingAppointment}
+          onClose={() => setEditingAppointment(null)}
         />
       ) : null}
 
