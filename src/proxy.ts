@@ -24,12 +24,19 @@ export async function proxy(request: NextRequest) {
 
   if (!user && !isPublicPath) {
     const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    const redirect = NextResponse.redirect(loginUrl);
+    // getUser() puede haber refrescado o limpiado la sesión (setAll ya corrió
+    // sobre getResponse()) — sin copiar esas cookies acá, el redirect las
+    // descarta y una cookie stale/inválida queda pegada en el browser.
+    for (const cookie of getResponse().cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    return redirect;
   }
 
   return getResponse();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt).*)"],
 };
