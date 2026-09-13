@@ -75,6 +75,7 @@ export const petsApi = {
     apiClient
       .get<Page<PetRecord>>(`/pets${toQueryString(params)}`)
       .then((page) => ({ ...page, data: page.data.map(toPet) })),
+  get: (id: string) => apiClient.get<PetRecord>(`/pets/${id}`).then(toPet),
   create: (input: PetInput, idempotencyKey: string) =>
     apiClient
       .post<PetRecord>("/pets", toBody(input), {

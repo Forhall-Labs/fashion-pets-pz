@@ -7,6 +7,7 @@ import { useOwnerDetail } from "./useOwnerDetail";
 
 const getOwner = vi.fn();
 const listPets = vi.fn();
+const listAppointmentsByRange = vi.fn();
 
 vi.mock("@/modules/shared/lib/owners-api", () => ({
   ownersApi: { get: (...args: unknown[]) => getOwner(...args) },
@@ -14,6 +15,10 @@ vi.mock("@/modules/shared/lib/owners-api", () => ({
 
 vi.mock("@/modules/shared/lib/pets-api", () => ({
   petsApi: { list: (...args: unknown[]) => listPets(...args) },
+}));
+
+vi.mock("@/modules/shared/lib/appointments-api", () => ({
+  appointmentsApi: { listByRange: (...args: unknown[]) => listAppointmentsByRange(...args) },
 }));
 
 vi.mock("@/modules/shared/lib/supabase-client", () => ({
@@ -40,6 +45,8 @@ const OWNER = {
 beforeEach(() => {
   getOwner.mockReset();
   listPets.mockReset();
+  listAppointmentsByRange.mockReset();
+  listAppointmentsByRange.mockResolvedValue([]);
 });
 
 describe("useOwnerDetail", () => {
@@ -56,17 +63,33 @@ describe("useOwnerDetail", () => {
     expect(result.current.pets.map((p) => p.name)).toEqual(["Rex"]);
   });
 
-  it("degrades to no upcoming appointments and no WhatsApp link for a real owner id", async () => {
+  it("has no upcoming appointments or WhatsApp link when none come back from the API", async () => {
     getOwner.mockResolvedValue(OWNER);
     listPets.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20 });
 
     const { result } = renderHook(() => useOwnerDetail(OWNER.id), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // El id real nunca matchea mockData, así que esto degrada a vacío en vez
-    // de mostrar datos falsos de otro dueño — ver el comentario en useOwnerDetail.ts.
     expect(result.current.upcoming).toEqual([]);
     expect(result.current.waLink).toBeNull();
+  });
+
+  it("resolves upcoming appointments against the owner's own pets, sorted by date/time", async () => {
+    getOwner.mockResolvedValue(OWNER);
+    const rex = { id: "p1", name: "Rex" };
+    const milo = { id: "p2", name: "Milo" };
+    listPets.mockResolvedValue({ data: [rex, milo], total: 2, page: 1, limit: 20 });
+    listAppointmentsByRange.mockResolvedValue([
+      { id: "a2", petId: "p2", date: "2026-03-11", startTime: "09:00", status: "scheduled" },
+      { id: "a1", petId: "p1", date: "2026-03-10", startTime: "10:00", status: "scheduled" },
+      { id: "a3", petId: "p1", date: "2026-03-05", startTime: "10:00", status: "cancelled" },
+    ]);
+
+    const { result } = renderHook(() => useOwnerDetail(OWNER.id), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.upcoming.map((a) => a.id)).toEqual(["a1", "a2"]);
+    expect(result.current.waLink).toContain("wa.me");
   });
 
   it("marks notFound on a 404 without leaving loading stuck", async () => {

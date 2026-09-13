@@ -3,8 +3,7 @@
 // dentro de WhatsApp. Puerto de docs/prototype/app.js.
 
 import { digitsOnly, formatDateLong } from "./date-utils";
-import type { Appointment, MockData, Owner, Pet } from "../types";
-import { petsOfOwner } from "./selectors";
+import type { Appointment, Owner, Pet } from "../types";
 
 export function whatsAppLinkForAppointment(appt: Appointment, pet: Pet, owner: Owner) {
   const phoneDigits = digitsOnly(owner.phone);
@@ -14,21 +13,18 @@ export function whatsAppLinkForAppointment(appt: Appointment, pet: Pet, owner: O
   return `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
 }
 
-export function whatsAppLinkForAllUpcoming(data: MockData, owner: Owner, todayIso: string) {
+export interface UpcomingForWhatsApp {
+  pet: Pet;
+  date: string;
+  startTime: string;
+}
+
+export function whatsAppLinkForAllUpcoming(owner: Owner, upcoming: UpcomingForWhatsApp[]) {
   const phoneDigits = digitsOnly(owner.phone);
   if (phoneDigits.length < 7) return null;
-  const pets = petsOfOwner(data, owner.id);
-  const upcoming = data.appointments
-    .filter(
-      (a) => pets.some((p) => p.id === a.petId) && a.status === "scheduled" && a.date >= todayIso,
-    )
-    .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
   if (!upcoming.length) return null;
   const lines = upcoming
-    .map((a) => {
-      const pet = pets.find((p) => p.id === a.petId);
-      return `• ${pet?.name}: ${formatDateLong(a.date)} a las ${a.startTime}`;
-    })
+    .map((a) => `• ${a.pet.name}: ${formatDateLong(a.date)} a las ${a.startTime}`)
     .join("\n");
   const message = `Hola ${owner.name}! Te recordamos las próximas citas:\n${lines}\n¡Te esperamos! 🐾`;
   return `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;

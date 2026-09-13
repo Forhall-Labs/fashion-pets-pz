@@ -1,90 +1,22 @@
-import { Fragment } from "react";
+import type { Appointment, BlackoutPeriod } from "@/modules/shared/types";
 
-import type { MockData } from "@/modules/shared/types";
+import { useYearGrid } from "./hooks/useCalendarGrids";
 
-import { AppointmentTile } from "./AppointmentTile";
-import { useDayWeekGrid, useMonthGrid, useYearGrid } from "./hooks/useCalendarGrids";
-
-interface GridProps {
-  data: MockData;
-  onOpenAppointment: (id: string) => void;
-}
-
-// Puerto de renderDayOrWeek() — sirve tanto para la vista Día (1 columna)
-// como Semana (7 columnas).
-export function DayWeekGrid({ data, days, onOpenAppointment }: GridProps & { days: string[] }) {
-  const { dayHeaders, rows } = useDayWeekGrid(data, days);
-
-  return (
-    <div className="cal-grid" style={{ gridTemplateColumns: `70px repeat(${days.length},1fr)` }}>
-      <div className="cal-day-col-header" />
-      {dayHeaders.map((h) => (
-        <div className="cal-day-col-header" key={h.iso}>
-          {h.label}
-        </div>
-      ))}
-      {rows.map((row) => (
-        <Fragment key={row.hMin}>
-          <div className="cal-hour-label">{row.label}</div>
-          {row.cells.map((cell) => (
-            <div className={`cal-cell ${cell.blackout ? "is-blackout" : ""}`} key={cell.key}>
-              {cell.appts.map((a) => (
-                <AppointmentTile key={a.id} appt={a} pet={a.pet} onOpen={onOpenAppointment} />
-              ))}
-            </div>
-          ))}
-        </Fragment>
-      ))}
-    </div>
-  );
-}
-
-// Puerto de renderMonth().
-export function MonthGrid({
-  data,
-  year,
-  monthIndex,
-  todayIso,
-  onOpenAppointment,
-}: GridProps & { year: number; monthIndex: number; todayIso: string }) {
-  const { weekdayLabels, cells } = useMonthGrid(data, year, monthIndex, todayIso);
-
-  return (
-    <div className="cal-month-grid">
-      {weekdayLabels.map((d) => (
-        <div className="cal-month-weekday" key={d}>
-          {d}
-        </div>
-      ))}
-      {cells.map((cell) => (
-        <div
-          className={`cal-month-day ${cell.otherMonth ? "is-other-month" : ""} ${cell.blackout ? "is-blackout" : ""} ${cell.isToday ? "is-today" : ""}`}
-          key={cell.iso}
-        >
-          <span className="cal-month-daynum">{cell.dayNum}</span>
-          {cell.appts.map((a) => (
-            <AppointmentTile key={a.id} appt={a} pet={a.pet} onOpen={onOpenAppointment} />
-          ))}
-          {cell.moreCount > 0 ? (
-            <span className="cal-month-more">+{cell.moreCount} más</span>
-          ) : null}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Puerto de renderYear().
+// Puerto de renderYear() — Día/Semana/Mes ahora los resuelve RbcCalendar.tsx
+// (react-big-calendar); esta sigue siendo la única vista con grid CSS
+// custom, ya que la librería no soporta año nativo.
 export function YearGrid({
-  data,
+  appointments,
+  blackoutPeriods,
   year,
   onGotoMonth,
 }: {
-  data: MockData;
+  appointments: Appointment[];
+  blackoutPeriods: BlackoutPeriod[];
   year: number;
   onGotoMonth: (monthIndex: number) => void;
 }) {
-  const { months } = useYearGrid(data, year);
+  const { months } = useYearGrid(appointments, blackoutPeriods, year);
 
   return (
     <div className="cal-year-grid">
