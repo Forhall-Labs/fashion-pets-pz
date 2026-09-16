@@ -1,16 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
-import { mockData } from "@/modules/shared/lib/mock-data";
+import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
+import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
+import type { Appointment } from "@/modules/shared/types";
 
-import { DayWeekGrid, MonthGrid, YearGrid } from "./CalendarGrids";
+import { RbcCalendar } from "./RbcCalendar";
+import { TodayAgendaPanel } from "./TodayAgendaPanel";
+import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
+import { useAgendaData } from "./hooks/useAgendaData";
 
 // Puerto de la pantalla Agenda (screen-header + agenda-toolbar +
 // #calendar-root) de docs/prototype/prototype.html + renderAgenda() de
-// app.js. Drag-and-drop y "Nueva cita" quedan para la próxima etapa.
+// app.js — Día/Semana/Mes ahora corren sobre react-big-calendar (ver
+// RbcCalendar.tsx) contra datos reales; Año sigue siendo el grid custom.
+// Drag-and-drop queda para la próxima etapa (Sprint 4).
 export function AgendaView() {
   const {
     view,
@@ -19,7 +27,6 @@ export function AgendaView() {
     anchor,
     anchorDate,
     weekDays,
-    todayIso,
     openAppointmentId,
     openAppointment,
     closeAppointment,
@@ -28,30 +35,79 @@ export function AgendaView() {
     gotoMonth,
   } = useAgendaView();
 
+  const {
+    appointments,
+    petsById,
+    blackoutPeriods,
+    todayAppointments,
+    todayLoading,
+    loading,
+    error,
+    refetch,
+  } = useAgendaData(view, anchor, anchorDate, weekDays);
+
+  const [formState, setFormState] = useState<
+    { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
+  >(null);
+
   let grid: ReactNode;
-  if (view === "day") {
-    grid = <DayWeekGrid data={mockData} days={[anchor]} onOpenAppointment={openAppointment} />;
-  } else if (view === "week") {
-    grid = <DayWeekGrid data={mockData} days={weekDays!} onOpenAppointment={openAppointment} />;
-  } else if (view === "month") {
+  if (loading) {
+    grid = <WalkingDogLoader />;
+  } else if (error) {
     grid = (
-      <MonthGrid
-        data={mockData}
+      <div className="empty-state">
+        <span className="empty-state-icon">⚠️</span>
+        No se pudieron cargar las citas.
+        <div style={{ marginTop: 8 }}>
+          <button className="btn btn-secondary btn-sm" onClick={refetch}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  } else if (view === "year") {
+    grid = (
+      <YearGrid
+        appointments={appointments}
+        blackoutPeriods={blackoutPeriods}
         year={anchorDate.getFullYear()}
-        monthIndex={anchorDate.getMonth()}
-        todayIso={todayIso}
-        onOpenAppointment={openAppointment}
+        onGotoMonth={gotoMonth}
       />
     );
   } else {
-    grid = <YearGrid data={mockData} year={anchorDate.getFullYear()} onGotoMonth={gotoMonth} />;
+    // El calendario se muestra siempre (incluso sin citas) para que el
+    // rayado de blackout sea visible — un día bloqueado normalmente no
+    // tiene ninguna cita, así que ocultar el grid entero en ese caso
+    // escondía justo lo que se quiere resaltar. El aviso de "sin citas" va
+    // como nota arriba, no reemplaza el grid.
+    grid = (
+      <>
+        {appointments.length === 0 ? (
+          <div className="empty-state" style={{ padding: "var(--space-3)" }}>
+            No hay citas{" "}
+            {view === "day" ? "este día" : view === "week" ? "esta semana" : "este mes"}.
+          </div>
+        ) : null}
+        <RbcCalendar
+          view={view}
+          date={anchorDate}
+          appointments={appointments}
+          petsById={petsById}
+          blackoutPeriods={blackoutPeriods}
+          onOpenAppointment={openAppointment}
+        />
+      </>
+    );
   }
 
   return (
     <section className="screen" data-screen="agenda">
       <div className="screen-header">
         <h1 className="text-h1">Agenda</h1>
-        <button className="btn btn-primary" disabled title="Próximamente">
+        <button
+          className="btn btn-primary"
+          onClick={() => setFormState({ mode: "create", presetDate: anchor })}
+        >
           + Nueva cita
         </button>
       </div>
@@ -90,13 +146,32 @@ export function AgendaView() {
         </div>
       </div>
 
-      <div className="calendar-root">{grid}</div>
+      <div className="agenda-with-today-panel">
+        <div className="calendar-root">{grid}</div>
+        <TodayAgendaPanel
+          appointments={todayAppointments}
+          petsById={petsById}
+          loading={todayLoading}
+          onOpenAppointment={openAppointment}
+        />
+      </div>
 
       {openAppointmentId ? (
         <AppointmentDetailModal
-          data={mockData}
           appointmentId={openAppointmentId}
           onClose={closeAppointment}
+          onEdit={(appt) => {
+            closeAppointment();
+            setFormState({ mode: "edit", appointment: appt });
+          }}
+        />
+      ) : null}
+
+      {formState ? (
+        <AppointmentForm
+          appointment={formState.mode === "edit" ? formState.appointment : null}
+          presetDate={formState.mode === "create" ? formState.presetDate : undefined}
+          onClose={() => setFormState(null)}
         />
       ) : null}
     </section>
