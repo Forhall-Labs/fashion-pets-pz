@@ -428,11 +428,11 @@ textarea {
 }
 .badge-status-scheduled {
   background: rgba(217, 113, 60, 0.12);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-hover);
 }
 .badge-status-completed {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-status-cancelled {
   background: rgba(184, 64, 47, 0.1);
@@ -449,7 +449,7 @@ textarea {
 }
 .badge-pickup {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-incomplete {
   background: rgba(184, 64, 47, 0.1);
