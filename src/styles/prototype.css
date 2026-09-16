@@ -324,7 +324,7 @@ textarea {
 }
 .field .hint-warning {
   font-size: var(--text-small);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
 }
 .field-row {
   display: flex;
@@ -441,7 +441,7 @@ textarea {
 }
 .badge-suggested {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
 }
 .badge-aggressive {
   background: rgba(184, 64, 47, 0.12);
@@ -457,7 +457,7 @@ textarea {
 }
 .badge-exception {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
   border: 1px dashed var(--color-accent-dark);
 }
 
