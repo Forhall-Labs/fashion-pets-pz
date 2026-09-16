@@ -274,7 +274,7 @@ textarea {
 .field textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.15);
+  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.3);
 }
 .field input:disabled,
 .field select:disabled {
