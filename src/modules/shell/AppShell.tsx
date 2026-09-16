@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { MenuIcon } from "@/modules/shared/components/MenuIcon";
+
 import { NAV_LINKS, useAppShell } from "./hooks/useAppShell";
 
 // Puerto del <header class="topbar"> + <nav class="main-nav"> de
@@ -40,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <button className="mobile-nav-toggle" aria-label="Abrir menú" onClick={toggleNav}>
-        ☰
+        <MenuIcon size={22} />
       </button>
 
       <main className="main-content" id="main-content">

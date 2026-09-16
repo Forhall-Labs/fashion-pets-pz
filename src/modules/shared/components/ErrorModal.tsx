@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseIcon } from "./CloseIcon";
 import { ErrorIcon } from "./ErrorIcon";
 import { Modal } from "./Modal";
 
@@ -23,7 +24,7 @@ export function ErrorModal({ title = "Ups...", message, onClose }: ErrorModalPro
           aria-label="Cerrar"
           style={{ position: "absolute", top: 0, right: 0 }}
         >
-          ×
+          <CloseIcon size={18} />
         </button>
         <div className="error-modal-icon">
           <ErrorIcon />

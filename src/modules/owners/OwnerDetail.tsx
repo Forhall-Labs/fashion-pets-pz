@@ -17,6 +17,7 @@ import { isIncomplete } from "@/modules/shared/lib/selectors";
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
+import { WarningIcon } from "@/modules/shared/components/WarningIcon";
 import type { Appointment, Pet } from "@/modules/shared/types";
 
 import { OwnerForm } from "./OwnerForm";
@@ -71,7 +72,9 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
           </Link>
         </div>
         <div className="empty-state">
-          <span className="empty-state-icon">⚠️</span>
+          <span className="empty-state-icon">
+            <WarningIcon size={32} />
+          </span>
           {error}
         </div>
       </section>

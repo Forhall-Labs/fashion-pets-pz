@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { DAY_LABEL } from "@/modules/shared/lib/labels";
+import { SearchIcon } from "@/modules/shared/components/SearchIcon";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
+import { WarningIcon } from "@/modules/shared/components/WarningIcon";
 
 import { OwnerForm } from "./OwnerForm";
 import { useOwnersList } from "./hooks/useOwnersList";
@@ -32,7 +34,9 @@ export function OwnersList() {
       </div>
       {error && (
         <div className="empty-state">
-          <span className="empty-state-icon">⚠️</span>
+          <span className="empty-state-icon">
+            <WarningIcon size={32} />
+          </span>
           {error}
         </div>
       )}
@@ -43,7 +47,10 @@ export function OwnersList() {
           <div className="data-table">
             {owners.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-state-icon">🔍</span>No se encontraron dueños.
+                <span className="empty-state-icon">
+                  <SearchIcon size={32} />
+                </span>
+                No se encontraron dueños.
               </div>
             ) : (
               owners.map((o) => (

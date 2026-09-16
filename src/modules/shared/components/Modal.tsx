@@ -2,6 +2,8 @@
 
 import { type ReactNode } from "react";
 
+import { CloseIcon } from "./CloseIcon";
+
 interface ModalProps {
   onClose: () => void;
   wide?: boolean;
@@ -32,7 +34,7 @@ export function ModalHeader({ title, onClose }: { title: string; onClose?: () =>
       <h2 className="text-h2">{title}</h2>
       {onClose ? (
         <button className="modal-close" onClick={onClose} aria-label="Cerrar">
-          ×
+          <CloseIcon size={18} />
         </button>
       ) : null}
     </div>
