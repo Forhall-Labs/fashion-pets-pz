@@ -7,16 +7,19 @@
 :root {
   --color-primary: #d9713c;
   --color-primary-dark: #b65c2c;
+  --color-primary-hover: #9c4a1f;
   --color-secondary: #6e8f76;
   --color-secondary-dark: #58735f;
+  --color-secondary-hover: #465e4d;
   --color-accent: #e3a93b;
   --color-accent-dark: #c58f2a;
+  --color-accent-text: #8a6218;
   --color-danger: #b8402f;
   --color-danger-dark: #96311f;
   --color-neutral-900: #2b2622;
   --color-neutral-50: #faf5ef;
   --color-border: #e4dcd1;
-  --color-text-secondary: #8a8177;
+  --color-text-secondary: #756c61;
   --color-surface: #ffffff;
 
   --font-display: var(--font-poppins), "Poppins", sans-serif;
@@ -156,7 +159,7 @@ textarea {
   color: var(--color-neutral-900);
 }
 .nav-link.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .mobile-nav-toggle {
@@ -189,18 +192,18 @@ textarea {
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-hover);
 }
 .btn-secondary {
-  background: var(--color-secondary);
+  background: var(--color-secondary-dark);
   color: #fff;
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-secondary-dark);
+  background: var(--color-secondary-hover);
 }
 .btn-destructive {
   background: var(--color-danger);
@@ -219,7 +222,7 @@ textarea {
 }
 .btn-text {
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   padding: var(--space-1) var(--space-2);
 }
 .btn-text:hover:not(:disabled) {
@@ -595,7 +598,7 @@ textarea {
   color: var(--color-text-secondary);
 }
 .view-tab.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .agenda-nav {
