@@ -1,6 +1,8 @@
 // Helpers de fecha/hora en formato ISO (yyyy-mm-dd) y HH:MM — sin
 // dependencias externas, igual que en el prototipo (docs/prototype/app.js).
 
+import type { BlackoutPeriod } from "../types";
+
 export function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
@@ -72,6 +74,13 @@ export function minutesToTime(mins: number): string {
 
 export function rangesOverlap(startA: number, endA: number, startB: number, endB: number) {
   return startA < endB && startB < endA;
+}
+
+// Comparación lexicográfica directa porque las fechas ya vienen en ISO
+// (yyyy-mm-dd) — mismo criterio que ya usaba useYearGrid, ahora compartido
+// con RbcCalendar para que Día/Semana/Mes resalten blackout igual que Año.
+export function isDateBlackedOut(iso: string, periods: readonly BlackoutPeriod[]): boolean {
+  return periods.some((p) => iso >= p.startDate && iso <= p.endDate);
 }
 
 export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {

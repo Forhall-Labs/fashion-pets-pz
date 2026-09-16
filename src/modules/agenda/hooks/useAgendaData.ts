@@ -53,13 +53,25 @@ export function useAgendaData(
     queryFn: () => appointmentsApi.listByRange(from, to),
   });
   const petsQuery = useQuery({
-    queryKey: ["pets", { limit: 200 }],
-    queryFn: () => petsApi.list({ limit: 200 }),
+    // 100 es el máximo que acepta PaginationQueryDto (@Max(100) en el
+    // backend) — no es ajustable por acá. Sirve para el volumen actual de
+    // una sola peluquería; si en algún momento supera las 100 mascotas,
+    // este mapeo petId->nombre necesita un endpoint sin paginar o resolver
+    // por id bajo demanda en vez de traer todo de una.
+    queryKey: ["pets", { limit: 100 }],
+    queryFn: () => petsApi.list({ limit: 100 }),
   });
   const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
   const blackoutQuery = useQuery({
     queryKey: ["blackout-periods"],
     queryFn: blackoutPeriodsApi.list,
+  });
+  // Independiente del rango que esté mirando el usuario (podría estar en
+  // otro mes/día) — el panel de "Hoy" siempre muestra el día real de hoy.
+  const todayIso = toISODate(new Date());
+  const todayQuery = useQuery({
+    queryKey: ["appointments", { from: todayIso, to: todayIso }],
+    queryFn: () => appointmentsApi.listByRange(todayIso, todayIso),
   });
 
   const petsById = useMemo(
@@ -68,19 +80,21 @@ export function useAgendaData(
   );
 
   const appointments = appointmentsQuery.data ?? [];
-  const loading = appointmentsQuery.isLoading || petsQuery.isLoading || shopConfigQuery.isLoading;
-  const hasError = !!(
-    appointmentsQuery.error ||
-    petsQuery.error ||
-    shopConfigQuery.error ||
-    blackoutQuery.error
-  );
+  const loading = appointmentsQuery.isLoading || petsQuery.isLoading;
+  // shopConfig y blackoutPeriods no bloquean el render: shopConfig solo lo
+  // usa AppointmentForm (autocompletar duración, ya tolera que no esté) y
+  // blackoutPeriods es puramente cosmético (resaltado). Si cualquiera de
+  // los dos falla, la Agenda tiene que seguir mostrando el calendario con
+  // las citas reales — solo appointments/pets son datos que todas las
+  // vistas necesitan para poder pintar algo.
+  const hasError = !!(appointmentsQuery.error || petsQuery.error);
 
   function refetch() {
     void appointmentsQuery.refetch();
     void petsQuery.refetch();
     void shopConfigQuery.refetch();
     void blackoutQuery.refetch();
+    void todayQuery.refetch();
   }
 
   return {
@@ -88,6 +102,14 @@ export function useAgendaData(
     petsById,
     shopConfig: shopConfigQuery.data ?? null,
     blackoutPeriods: blackoutQuery.data ?? [],
+    todayAppointments: todayQuery.data ?? [],
+    // Aparte de `loading`: el panel de Hoy no depende del rango que esté
+    // mirando el usuario, así que no tiene sentido esperar a que cargue el
+    // resto del calendario, pero sí necesita esperar su propio fetch (+
+    // pets, para resolver nombres) antes de poder decir "no quedan citas" —
+    // si no, un instante muestra vacío antes de que lleguen los datos
+    // reales (mismo tipo de parpadeo ya arreglado en el detalle de cita).
+    todayLoading: todayQuery.isLoading || petsQuery.isLoading,
     loading,
     error: hasError,
     refetch,

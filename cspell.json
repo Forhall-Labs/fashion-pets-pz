@@ -110,7 +110,10 @@
     "Confirmás",
     "querés",
     "Seleccioná",
-    "instanciarlo"
+    "instanciarlo",
+    "recalcula",
+    "tipeó",
+    "inferría"
   ],
   "ignorePaths": [
     "node_modules",

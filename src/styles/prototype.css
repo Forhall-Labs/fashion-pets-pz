@@ -312,6 +312,17 @@ textarea {
 .field.has-error .error-msg {
   display: block;
 }
+/* Aviso no bloqueante (ej. desvío del día fijo) — mismo color que
+   badge-exception, distinto de has-error a propósito: esto no impide
+   guardar, solo informa que el backend lo va a marcar como excepción. */
+.field.has-warning input,
+.field.has-warning select {
+  border-color: var(--color-accent-dark);
+}
+.field .hint-warning {
+  font-size: var(--text-small);
+  color: var(--color-accent-dark);
+}
 .field-row {
   display: flex;
   gap: var(--space-4);
@@ -606,6 +617,64 @@ textarea {
   overflow: hidden;
 }
 
+.agenda-with-today-panel {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.agenda-with-today-panel .calendar-root {
+  flex: 1;
+  min-width: 0;
+}
+.today-panel {
+  flex-shrink: 0;
+  width: 260px;
+}
+.today-panel-toggle {
+  width: 100%;
+  margin-bottom: var(--space-2);
+}
+.today-panel-body {
+  padding: var(--space-3);
+}
+.today-panel-body h3 {
+  margin: 0 0 var(--space-2);
+}
+.today-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.today-panel-list li {
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-small);
+  border-left: 3px solid var(--color-primary);
+  background: rgba(217, 113, 60, 0.08);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.today-panel-list li:hover {
+  background: rgba(217, 113, 60, 0.16);
+}
+.today-panel-list li.is-cancelled {
+  border-left-color: var(--color-danger);
+  background: rgba(184, 64, 47, 0.06);
+  opacity: 0.75;
+}
+.today-panel-list .appt-time {
+  font-weight: 700;
+}
+.today-panel-list .badge {
+  margin-left: auto;
+}
+
 /* Day / Week grid */
 .cal-grid {
   display: grid;
@@ -760,6 +829,113 @@ textarea {
 .appt-tile .appt-time {
   font-weight: 700;
   margin-right: 3px;
+}
+
+/* react-big-calendar (Día/Semana/Mes) trae su propio CSS genérico — estas
+   reglas lo reemplazan para que se vea consistente con el resto de la app
+   (mismos tokens que las reglas cal-month y appt-tile de arriba, que siguen
+   siendo lo que usa la vista Año). Selectores compuestos (.rbc-event.appt-tile,
+   no .rbc-event solo) a propósito: ganan por especificidad sin depender de en
+   qué orden Next.js termine cargando esta hoja vs. react-big-calendar.css. */
+.rbc-calendar {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--color-neutral-900);
+}
+.rbc-off-range-bg {
+  background: var(--color-neutral-50);
+}
+.rbc-off-range {
+  color: var(--color-text-secondary);
+}
+.rbc-today {
+  background: transparent;
+}
+.rbc-header {
+  padding: var(--space-2);
+  font-size: var(--text-small);
+  font-weight: 600;
+  background: var(--color-neutral-50);
+  border-color: var(--color-border);
+  text-transform: capitalize;
+}
+.rbc-month-view,
+.rbc-time-view,
+.rbc-time-header.rbc-overflowing {
+  border-color: var(--color-border);
+}
+.rbc-day-bg + .rbc-day-bg,
+.rbc-month-row + .rbc-month-row,
+.rbc-header + .rbc-header,
+.rbc-time-content,
+.rbc-time-content > * + * > *,
+.rbc-timeslot-group,
+.rbc-time-header-content {
+  border-color: var(--color-border);
+}
+.rbc-date-cell {
+  padding: var(--space-2) var(--space-2) 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-align: right;
+}
+.rbc-date-cell.rbc-now .rbc-button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+}
+.rbc-time-gutter .rbc-timeslot-group {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+.rbc-current-time-indicator {
+  background: var(--color-primary);
+}
+.rbc-show-more {
+  font-size: var(--text-micro);
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.rbc-event.appt-tile {
+  background: rgba(217, 113, 60, 0.14);
+  border: none;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-neutral-900);
+  padding: 2px 6px;
+  font-size: var(--text-micro);
+  box-shadow: none;
+}
+.rbc-event.appt-tile:hover,
+.rbc-event.appt-tile:focus {
+  background: rgba(217, 113, 60, 0.22);
+  outline: none;
+}
+.rbc-event.appt-tile.is-quick {
+  border-left-color: var(--color-secondary);
+  background: rgba(110, 143, 118, 0.14);
+}
+.rbc-event.appt-tile.is-auto {
+  border-left-style: dashed;
+}
+.rbc-event.appt-tile.is-exception {
+  border-left-color: var(--color-danger);
+  border-left-style: dotted;
+}
+.rbc-event.appt-tile .appt-time {
+  font-weight: 700;
+  margin-right: 3px;
+}
+/* Blackout en Día/Semana/Mes (dayPropGetter en RbcCalendar.tsx agrega esta
+   clase) — mismo rayado que .cal-cell.is-blackout usaba en el grid viejo y
+   que .cal-year-mini-day.is-blackout sigue usando en la vista Año. */
+.rbc-day-bg.is-blackout {
+  background: repeating-linear-gradient(45deg, #f2e9e0, #f2e9e0 6px, #ece0d3 6px, #ece0d3 12px);
 }
 
 /* ===================== RECOMMENDATION CARD ===================== */

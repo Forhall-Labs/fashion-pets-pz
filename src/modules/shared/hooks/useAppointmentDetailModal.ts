@@ -64,7 +64,14 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
   }
 
   return {
-    loading: apptQuery.isLoading,
+    // Incluye petQuery a propósito: apptQuery resuelve primero y rapidísimo,
+    // dejando un instante donde apptQuery.isLoading ya es false pero
+    // petQuery todavía ni arrancó su fetch (pet sigue null) — sin esto, ese
+    // instante caía en la rama de error ("no se pudo cargar la cita") antes
+    // de que petQuery llegara a resolver, un falso negativo, no una falla
+    // real. ownerQuery se deja afuera a propósito: su carga/error es
+    // independiente (ver ownerSectionError) y no debe tapar el resto del panel.
+    loading: apptQuery.isLoading || (!!petId && petQuery.isLoading),
     // La cita, o la mascota que referencia, ya no existen — el panel entero
     // no tiene nada sensato que mostrar (todo el resto de la UI depende de
     // ambas), a diferencia del dueño (ver ownerSectionError abajo).

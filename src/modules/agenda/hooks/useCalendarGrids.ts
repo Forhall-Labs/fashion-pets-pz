@@ -1,6 +1,6 @@
 "use client";
 
-import { MONTH_NAMES, toISODate } from "@/modules/shared/lib/date-utils";
+import { MONTH_NAMES, isDateBlackedOut, toISODate } from "@/modules/shared/lib/date-utils";
 import type { Appointment, BlackoutPeriod } from "@/modules/shared/types";
 
 function startOfGrid(year: number, monthIndex: number) {
@@ -30,7 +30,7 @@ export function useYearGrid(
         iso,
         dayNum: d.getDate(),
         hasAppt: appointments.some((a) => a.date === iso),
-        blackout: blackoutPeriods.some((b) => iso >= b.startDate && iso <= b.endDate),
+        blackout: isDateBlackedOut(iso, blackoutPeriods),
       };
     });
     return { monthIndex: m, name, miniDays };

@@ -9,6 +9,7 @@ import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import type { Appointment } from "@/modules/shared/types";
 
 import { RbcCalendar } from "./RbcCalendar";
+import { TodayAgendaPanel } from "./TodayAgendaPanel";
 import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
 import { useAgendaData } from "./hooks/useAgendaData";
@@ -34,12 +35,16 @@ export function AgendaView() {
     gotoMonth,
   } = useAgendaView();
 
-  const { appointments, petsById, blackoutPeriods, loading, error, refetch } = useAgendaData(
-    view,
-    anchor,
-    anchorDate,
-    weekDays,
-  );
+  const {
+    appointments,
+    petsById,
+    blackoutPeriods,
+    todayAppointments,
+    todayLoading,
+    loading,
+    error,
+    refetch,
+  } = useAgendaData(view, anchor, anchorDate, weekDays);
 
   const [formState, setFormState] = useState<
     { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
@@ -69,21 +74,29 @@ export function AgendaView() {
         onGotoMonth={gotoMonth}
       />
     );
-  } else if (appointments.length === 0) {
-    grid = (
-      <div className="empty-state">
-        No hay citas {view === "day" ? "este día" : view === "week" ? "esta semana" : "este mes"}.
-      </div>
-    );
   } else {
+    // El calendario se muestra siempre (incluso sin citas) para que el
+    // rayado de blackout sea visible — un día bloqueado normalmente no
+    // tiene ninguna cita, así que ocultar el grid entero en ese caso
+    // escondía justo lo que se quiere resaltar. El aviso de "sin citas" va
+    // como nota arriba, no reemplaza el grid.
     grid = (
-      <RbcCalendar
-        view={view}
-        date={anchorDate}
-        appointments={appointments}
-        petsById={petsById}
-        onOpenAppointment={openAppointment}
-      />
+      <>
+        {appointments.length === 0 ? (
+          <div className="empty-state" style={{ padding: "var(--space-3)" }}>
+            No hay citas{" "}
+            {view === "day" ? "este día" : view === "week" ? "esta semana" : "este mes"}.
+          </div>
+        ) : null}
+        <RbcCalendar
+          view={view}
+          date={anchorDate}
+          appointments={appointments}
+          petsById={petsById}
+          blackoutPeriods={blackoutPeriods}
+          onOpenAppointment={openAppointment}
+        />
+      </>
     );
   }
 
@@ -133,7 +146,15 @@ export function AgendaView() {
         </div>
       </div>
 
-      <div className="calendar-root">{grid}</div>
+      <div className="agenda-with-today-panel">
+        <div className="calendar-root">{grid}</div>
+        <TodayAgendaPanel
+          appointments={todayAppointments}
+          petsById={petsById}
+          loading={todayLoading}
+          onOpenAppointment={openAppointment}
+        />
+      </div>
 
       {openAppointmentId ? (
         <AppointmentDetailModal

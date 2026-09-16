@@ -30,14 +30,17 @@ export function AppointmentForm({
   const {
     editing,
     register,
+    registerDuration,
     errors,
-    pets,
+    petOptions,
     petsLoading,
     petId,
     serviceType,
     quickServiceDisabled,
     handlePetChange,
     handleServiceTypeChange,
+    hoursError,
+    dayDeviationWarning,
     submitting,
     error,
     clearError,
@@ -61,9 +64,9 @@ export function AppointmentForm({
               disabled={petsLoading}
             >
               <option value="">Seleccioná una mascota…</option>
-              {pets.map((p) => (
+              {petOptions.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {p.label}
                 </option>
               ))}
             </select>
@@ -92,19 +95,25 @@ export function AppointmentForm({
           </div>
 
           <div className="field-row">
-            <div className={`field ${errors.date ? "has-error" : ""}`}>
+            <div
+              className={`field ${errors.date ? "has-error" : dayDeviationWarning ? "has-warning" : ""}`}
+            >
               <label htmlFor="af-date">Fecha</label>
               <input type="date" id="af-date" {...register("date")} />
-              <span className="error-msg">{errors.date?.message}</span>
+              {errors.date?.message ? (
+                <span className="error-msg">{errors.date.message}</span>
+              ) : dayDeviationWarning ? (
+                <span className="hint-warning">{dayDeviationWarning}</span>
+              ) : null}
             </div>
-            <div className={`field ${errors.startTime ? "has-error" : ""}`}>
+            <div className={`field ${errors.startTime || hoursError ? "has-error" : ""}`}>
               <label htmlFor="af-time">Horario</label>
               <input type="time" id="af-time" {...register("startTime")} />
-              <span className="error-msg">{errors.startTime?.message}</span>
+              <span className="error-msg">{errors.startTime?.message ?? hoursError}</span>
             </div>
             <div className={`field ${errors.durationMinutes ? "has-error" : ""}`}>
               <label htmlFor="af-duration">Duración (min)</label>
-              <input type="number" id="af-duration" min={1} {...register("durationMinutes")} />
+              <input type="number" id="af-duration" min={1} {...registerDuration} />
               <span className="error-msg">{errors.durationMinutes?.message}</span>
             </div>
           </div>
@@ -116,7 +125,8 @@ export function AppointmentForm({
             <button
               type="submit"
               className={`btn btn-primary ${submitting ? "btn-loading" : ""}`}
-              disabled={submitting}
+              disabled={submitting || !!hoursError}
+              title={hoursError ?? undefined}
             >
               {submitting ? <PawPrintsSpinner /> : "Guardar"}
             </button>

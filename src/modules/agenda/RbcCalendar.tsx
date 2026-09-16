@@ -6,7 +6,8 @@ import { format, getDay, parse, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-import type { Appointment, Pet } from "@/modules/shared/types";
+import { isDateBlackedOut, toISODate } from "@/modules/shared/lib/date-utils";
+import type { Appointment, BlackoutPeriod, Pet } from "@/modules/shared/types";
 
 import { appointmentTileClasses, useAppointmentTile } from "./hooks/useAppointmentTile";
 
@@ -48,6 +49,17 @@ function eventPropGetter(event: RbcEvent) {
   return { className: appointmentTileClasses(event.resource.appt).join(" ") };
 }
 
+// dayPropGetter cubre tanto la celda de Mes como la columna de fondo de
+// Día/Semana en el time-grid — un solo prop resalta blackout en las 3
+// vistas. Mismo patrón visual (rayado) que ya usaba .cal-cell.is-blackout
+// en el grid custom viejo y .cal-year-mini-day.is-blackout en Año.
+function makeDayPropGetter(blackoutPeriods: BlackoutPeriod[]) {
+  return (date: Date) => {
+    if (!isDateBlackedOut(toISODate(date), blackoutPeriods)) return {};
+    return { className: "is-blackout" };
+  };
+}
+
 function toDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time}`);
 }
@@ -57,6 +69,7 @@ interface RbcCalendarProps {
   date: Date;
   appointments: Appointment[];
   petsById: Map<string, Pet>;
+  blackoutPeriods: BlackoutPeriod[];
   onOpenAppointment: (id: string) => void;
 }
 
@@ -65,8 +78,10 @@ export function RbcCalendar({
   date,
   appointments,
   petsById,
+  blackoutPeriods,
   onOpenAppointment,
 }: RbcCalendarProps) {
+  const dayPropGetter = useMemo(() => makeDayPropGetter(blackoutPeriods), [blackoutPeriods]);
   const events = useMemo<RbcEvent[]>(() => {
     const result: RbcEvent[] = [];
     for (const appt of appointments) {
@@ -95,6 +110,7 @@ export function RbcCalendar({
       toolbar={false}
       onSelectEvent={(event) => onOpenAppointment((event as RbcEvent).id)}
       eventPropGetter={(event) => eventPropGetter(event as RbcEvent)}
+      dayPropGetter={dayPropGetter}
       components={{ event: EventContent }}
       style={{ height: 640 }}
     />
