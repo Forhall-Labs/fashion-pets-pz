@@ -12,7 +12,9 @@ import {
 } from "./Badge";
 import { formatDateLong } from "../lib/date-utils";
 import { Modal, ModalHeader } from "./Modal";
+import { MapPinIcon } from "./MapPinIcon";
 import { WalkingDogLoader } from "./WalkingDogLoader";
+import { WarningIcon } from "./WarningIcon";
 import { appointmentsApi } from "../lib/appointments-api";
 import { useAppointmentDetailModal } from "../hooks/useAppointmentDetailModal";
 import type { Appointment } from "../types";
@@ -76,7 +78,9 @@ export function AppointmentDetailModal({
       <Modal onClose={onClose}>
         <ModalHeader title="Detalle de cita" onClose={onClose} />
         <div className="empty-state">
-          <span className="empty-state-icon">⚠️</span>
+          <span className="empty-state-icon">
+            <WarningIcon size={32} />
+          </span>
           No se pudo cargar la cita.
         </div>
       </Modal>
@@ -115,7 +119,9 @@ export function AppointmentDetailModal({
       </p>
       {appt.flaggedReason ? <p className="text-small">{appt.flaggedReason}</p> : null}
       {pet.needsPickup ? (
-        <p className="text-small">📍 {loc?.address || "Ubicación faltante"}</p>
+        <p className="text-small" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <MapPinIcon size={14} /> {loc?.address || "Ubicación faltante"}
+        </p>
       ) : null}
       <div className="modal-actions" style={{ justifyContent: "flex-start" }}>
         <a

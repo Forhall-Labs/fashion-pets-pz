@@ -2,6 +2,7 @@
 
 import { mockData } from "@/modules/shared/lib/mock-data";
 import { getOwner, getPet, petLocation } from "@/modules/shared/lib/selectors";
+import { CarIcon } from "@/modules/shared/components/CarIcon";
 
 import { usePickupsView } from "./hooks/usePickupsView";
 
@@ -36,7 +37,10 @@ export function PickupsView() {
 
       {pickupAppts.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon">🚗</span>No hay pickups programados para este día.
+          <span className="empty-state-icon">
+            <CarIcon size={32} />
+          </span>
+          No hay pickups programados para este día.
         </div>
       ) : showingRoute ? (
         <>

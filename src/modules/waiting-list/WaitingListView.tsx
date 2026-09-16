@@ -1,6 +1,7 @@
 "use client";
 
 import { SizeBadge } from "@/modules/shared/components/Badge";
+import { HourglassIcon } from "@/modules/shared/components/HourglassIcon";
 import { formatDateShort } from "@/modules/shared/lib/date-utils";
 
 import { useWaitingListView } from "./hooks/useWaitingListView";
@@ -23,7 +24,10 @@ export function WaitingListView() {
 
       {active.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon">⏳</span>No hay mascotas en la lista de espera.
+          <span className="empty-state-icon">
+            <HourglassIcon size={32} />
+          </span>
+          No hay mascotas en la lista de espera.
         </div>
       ) : (
         <div className="data-table">

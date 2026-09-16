@@ -7,16 +7,19 @@
 :root {
   --color-primary: #d9713c;
   --color-primary-dark: #b65c2c;
+  --color-primary-hover: #9c4a1f;
   --color-secondary: #6e8f76;
   --color-secondary-dark: #58735f;
+  --color-secondary-hover: #465e4d;
   --color-accent: #e3a93b;
   --color-accent-dark: #c58f2a;
+  --color-accent-text: #8a6218;
   --color-danger: #b8402f;
   --color-danger-dark: #96311f;
   --color-neutral-900: #2b2622;
   --color-neutral-50: #faf5ef;
   --color-border: #e4dcd1;
-  --color-text-secondary: #8a8177;
+  --color-text-secondary: #756c61;
   --color-surface: #ffffff;
 
   --font-display: var(--font-poppins), "Poppins", sans-serif;
@@ -156,7 +159,7 @@ textarea {
   color: var(--color-neutral-900);
 }
 .nav-link.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .mobile-nav-toggle {
@@ -189,18 +192,18 @@ textarea {
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-hover);
 }
 .btn-secondary {
-  background: var(--color-secondary);
+  background: var(--color-secondary-dark);
   color: #fff;
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-secondary-dark);
+  background: var(--color-secondary-hover);
 }
 .btn-destructive {
   background: var(--color-danger);
@@ -219,7 +222,7 @@ textarea {
 }
 .btn-text {
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   padding: var(--space-1) var(--space-2);
 }
 .btn-text:hover:not(:disabled) {
@@ -231,8 +234,8 @@ textarea {
 }
 .btn-icon {
   padding: var(--space-2);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
 }
 .btn-block {
   width: 100%;
@@ -271,7 +274,7 @@ textarea {
 .field textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.15);
+  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.3);
 }
 .field input:disabled,
 .field select:disabled {
@@ -288,17 +291,21 @@ textarea {
 }
 .password-field input {
   width: 100%;
-  padding-right: 40px;
+  padding-right: 48px;
 }
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: var(--space-2);
+  right: 0;
   transform: translateY(-50%);
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 0;
   color: var(--color-text-secondary);
 }
 .password-toggle:hover {
@@ -321,7 +328,7 @@ textarea {
 }
 .field .hint-warning {
   font-size: var(--text-small);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
 }
 .field-row {
   display: flex;
@@ -425,11 +432,11 @@ textarea {
 }
 .badge-status-scheduled {
   background: rgba(217, 113, 60, 0.12);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-hover);
 }
 .badge-status-completed {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-status-cancelled {
   background: rgba(184, 64, 47, 0.1);
@@ -438,7 +445,7 @@ textarea {
 }
 .badge-suggested {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
 }
 .badge-aggressive {
   background: rgba(184, 64, 47, 0.12);
@@ -446,7 +453,7 @@ textarea {
 }
 .badge-pickup {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-incomplete {
   background: rgba(184, 64, 47, 0.1);
@@ -454,7 +461,7 @@ textarea {
 }
 .badge-exception {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
   border: 1px dashed var(--color-accent-dark);
 }
 
@@ -489,9 +496,13 @@ textarea {
   margin-bottom: var(--space-4);
 }
 .modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
-  font-size: 1.25rem;
   color: var(--color-text-secondary);
 }
 .modal-actions {
@@ -564,8 +575,8 @@ textarea {
   border-radius: var(--radius-md);
 }
 .empty-state-icon {
-  font-size: 2rem;
-  display: block;
+  display: flex;
+  justify-content: center;
   margin-bottom: var(--space-2);
 }
 
@@ -595,7 +606,7 @@ textarea {
   color: var(--color-text-secondary);
 }
 .view-tab.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .agenda-nav {
@@ -1088,13 +1099,15 @@ textarea {
   }
   .mobile-nav-toggle {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     background: none;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    font-size: 1.1rem;
-    padding: 6px 10px;
     position: fixed;
-    top: 10px;
+    top: 8px;
     right: var(--space-4);
     z-index: 25;
   }
