@@ -10,11 +10,13 @@ export function YearGrid({
   blackoutPeriods,
   year,
   onGotoMonth,
+  onGotoDay,
 }: {
   appointments: Appointment[];
   blackoutPeriods: BlackoutPeriod[];
   year: number;
   onGotoMonth: (monthIndex: number) => void;
+  onGotoDay: (iso: string) => void;
 }) {
   const { months } = useYearGrid(appointments, blackoutPeriods, year);
 
@@ -35,10 +37,20 @@ export function YearGrid({
                 <div className="cal-year-mini-day" key={i} />
               ) : (
                 <div
-                  className={`cal-year-mini-day ${day.hasAppt ? "has-appt" : ""} ${day.blackout ? "is-blackout" : ""}`}
+                  className={`cal-year-mini-day ${day.count > 0 ? "has-appt" : ""} ${day.blackout ? "is-blackout" : ""}`}
                   key={day.iso}
+                  role="button"
+                  tabIndex={0}
+                  title={day.count > 0 ? `${day.count} cita(s)` : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onGotoDay(day.iso);
+                  }}
                 >
                   {day.dayNum}
+                  {day.count > 0 ? (
+                    <span className="cal-year-mini-day-count">{day.count}</span>
+                  ) : null}
                 </div>
               ),
             )}

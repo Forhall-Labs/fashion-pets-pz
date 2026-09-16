@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "../lib/api-client";
-import { translateApiError } from "../lib/api-errors";
+import { translateAppointmentError } from "../lib/api-errors";
 import { appointmentFormSchema, type AppointmentFormValues } from "../lib/appointment-schema";
 import { appointmentsApi, type AppointmentInput } from "../lib/appointments-api";
 import { fromISODate, minutesToTime, timeToMinutes } from "../lib/date-utils";
@@ -27,16 +26,6 @@ interface UseAppointmentFormArgs {
   presetPetId?: string;
   onSaved?: (appt: Appointment) => void;
   onClose: () => void;
-}
-
-// 409 de AppointmentValidationService trae un mensaje específico y
-// accionable (horario/capacidad/blackout/overlap) — se muestra tal cual en
-// vez del genérico de translateApiError().
-function translateAppointmentError(err: unknown): string {
-  if (err instanceof ApiError && err.status === 409) {
-    return err.messages.join(" ");
-  }
-  return translateApiError(err);
 }
 
 // Puerto de openAppointmentForm() (docs/prototype/app.js:517-599) contra la

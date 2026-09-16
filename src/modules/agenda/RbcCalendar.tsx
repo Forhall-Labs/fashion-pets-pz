@@ -2,11 +2,15 @@
 
 import { useMemo } from "react";
 import { Calendar, dateFnsLocalizer, type View } from "react-big-calendar";
+import withDragAndDrop, {
+  type EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
 import { format, getDay, parse, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
-import { isDateBlackedOut, toISODate } from "@/modules/shared/lib/date-utils";
+import { isDateBlackedOut, timeOfDay, toISODate } from "@/modules/shared/lib/date-utils";
 import type { Appointment, BlackoutPeriod, Pet } from "@/modules/shared/types";
 
 import { appointmentTileClasses, useAppointmentTile } from "./hooks/useAppointmentTile";
@@ -17,6 +21,14 @@ import { appointmentTileClasses, useAppointmentTile } from "./hooks/useAppointme
 // deshabilitado: la navegación (prev/next/"Hoy"/tabs) la maneja el
 // agenda-toolbar existente en AgendaView.tsx, este componente es 100%
 // controlado por props (view/date).
+//
+// El addon oficial de drag-and-drop (withDragAndDrop) no depende de
+// react-dnd ni de ninguna librería externa — EventWrapper conecta
+// onMouseDown y onTouchStart al mismo handler, así que mouse y touch ya
+// vienen resueltos sin agregar dnd-kit (verificado contra el código
+// instalado, node_modules/react-big-calendar/lib/addons/dragAndDrop).
+const DnDCalendar = withDragAndDrop<RbcEvent>(Calendar);
+
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -71,6 +83,15 @@ interface RbcCalendarProps {
   petsById: Map<string, Pet>;
   blackoutPeriods: BlackoutPeriod[];
   onOpenAppointment: (id: string) => void;
+  onReschedule: (id: string, input: { date: string; startTime: string }) => void;
+  onDrillDown: (date: Date) => void;
+}
+
+// Solo citas activas se pueden arrastrar — refuerza en la UI la misma
+// guardia que AppointmentsService.update() aplica del lado del backend
+// (una cita cancelada/completada no se puede reprogramar).
+function draggableAccessor(event: RbcEvent) {
+  return event.resource.appt.status === "scheduled";
 }
 
 export function RbcCalendar({
@@ -80,6 +101,8 @@ export function RbcCalendar({
   petsById,
   blackoutPeriods,
   onOpenAppointment,
+  onReschedule,
+  onDrillDown,
 }: RbcCalendarProps) {
   const dayPropGetter = useMemo(() => makeDayPropGetter(blackoutPeriods), [blackoutPeriods]);
   const events = useMemo<RbcEvent[]>(() => {
@@ -99,8 +122,13 @@ export function RbcCalendar({
     return result;
   }, [appointments, petsById]);
 
+  function handleEventDrop({ event, start }: EventInteractionArgs<RbcEvent>) {
+    const startDate = new Date(start);
+    onReschedule(event.id, { date: toISODate(startDate), startTime: timeOfDay(startDate) });
+  }
+
   return (
-    <Calendar
+    <DnDCalendar
       localizer={localizer}
       culture="es"
       events={events}
@@ -113,6 +141,10 @@ export function RbcCalendar({
       dayPropGetter={dayPropGetter}
       components={{ event: EventContent }}
       style={{ height: 640 }}
+      draggableAccessor={draggableAccessor}
+      resizable={false}
+      onEventDrop={handleEventDrop}
+      onDrillDown={(drillDate) => onDrillDown(drillDate)}
     />
   );
 }

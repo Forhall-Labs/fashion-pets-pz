@@ -5,8 +5,11 @@ import type { ReactNode } from "react";
 
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
+import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
+import { toISODate } from "@/modules/shared/lib/date-utils";
+import { useRescheduleAppointment } from "@/modules/shared/hooks/useRescheduleAppointment";
 import type { Appointment } from "@/modules/shared/types";
 
 import { RbcCalendar } from "./RbcCalendar";
@@ -18,8 +21,9 @@ import { useAgendaData } from "./hooks/useAgendaData";
 // Puerto de la pantalla Agenda (screen-header + agenda-toolbar +
 // #calendar-root) de docs/prototype/prototype.html + renderAgenda() de
 // app.js — Día/Semana/Mes ahora corren sobre react-big-calendar (ver
-// RbcCalendar.tsx) contra datos reales; Año sigue siendo el grid custom.
-// Drag-and-drop queda para la próxima etapa (Sprint 4).
+// RbcCalendar.tsx) contra datos reales, con drag-and-drop (HU-2.3) vía el
+// addon oficial de la librería; Año sigue siendo el grid custom, con
+// contador por día + drill-down (HU-2.1).
 export function AgendaView() {
   const {
     view,
@@ -34,6 +38,7 @@ export function AgendaView() {
     shift,
     goToToday,
     gotoMonth,
+    gotoDay,
   } = useAgendaView();
 
   const {
@@ -50,6 +55,12 @@ export function AgendaView() {
   const [formState, setFormState] = useState<
     { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
   >(null);
+
+  const {
+    reschedule,
+    error: rescheduleError,
+    clearError: clearRescheduleError,
+  } = useRescheduleAppointment();
 
   let grid: ReactNode;
   if (loading) {
@@ -75,6 +86,7 @@ export function AgendaView() {
         blackoutPeriods={blackoutPeriods}
         year={anchorDate.getFullYear()}
         onGotoMonth={gotoMonth}
+        onGotoDay={gotoDay}
       />
     );
   } else {
@@ -98,6 +110,8 @@ export function AgendaView() {
           petsById={petsById}
           blackoutPeriods={blackoutPeriods}
           onOpenAppointment={openAppointment}
+          onReschedule={reschedule}
+          onDrillDown={(d) => gotoDay(toISODate(d))}
         />
       </>
     );
@@ -175,6 +189,14 @@ export function AgendaView() {
           appointment={formState.mode === "edit" ? formState.appointment : null}
           presetDate={formState.mode === "create" ? formState.presetDate : undefined}
           onClose={() => setFormState(null)}
+        />
+      ) : null}
+
+      {rescheduleError ? (
+        <ErrorModal
+          title="No se pudo reprogramar"
+          message={rescheduleError}
+          onClose={clearRescheduleError}
         />
       ) : null}
     </section>

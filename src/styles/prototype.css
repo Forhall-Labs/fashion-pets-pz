@@ -791,6 +791,7 @@ textarea {
   gap: 2px;
 }
 .cal-year-mini-day {
+  position: relative;
   font-size: 9px;
   text-align: center;
   height: 16px;
@@ -799,6 +800,7 @@ textarea {
   justify-content: center;
   border-radius: 3px;
   color: var(--color-text-secondary);
+  cursor: pointer;
 }
 .cal-year-mini-day.has-appt {
   background: var(--color-primary);
@@ -807,6 +809,20 @@ textarea {
 }
 .cal-year-mini-day.is-blackout {
   background: #ece0d3;
+}
+.cal-year-mini-day-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 10px;
+  height: 10px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--color-neutral-900);
+  color: #fff;
+  font-size: 7px;
+  line-height: 10px;
+  font-weight: 700;
 }
 
 /* Appointment tile */
