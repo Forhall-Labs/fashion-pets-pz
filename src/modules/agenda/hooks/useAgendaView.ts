@@ -21,8 +21,7 @@ export const VIEW_TABS: { view: CalView; label: string }[] = [
   { view: "year", label: "Año" },
 ];
 
-// Puerto de renderAgenda() de app.js. Drag-and-drop y "Nueva cita" quedan
-// para la próxima etapa.
+// Puerto de renderAgenda() de app.js.
 export function useAgendaView() {
   const [view, setView] = useState<CalView>("month");
   const [anchor, setAnchor] = useState(TODAY_ISO);
@@ -44,6 +43,11 @@ export function useAgendaView() {
   function gotoMonth(monthIndex: number) {
     setAnchor(toISODate(new Date(anchorDate.getFullYear(), monthIndex, 1)));
     setView("month");
+  }
+
+  function gotoDay(iso: string) {
+    setAnchor(iso);
+    setView("day");
   }
 
   let label: string;
@@ -80,5 +84,6 @@ export function useAgendaView() {
     shift,
     goToToday,
     gotoMonth,
+    gotoDay,
   };
 }

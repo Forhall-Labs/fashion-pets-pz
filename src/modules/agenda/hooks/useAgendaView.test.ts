@@ -55,6 +55,16 @@ describe("useAgendaView", () => {
     expect(result.current.anchor).toBe(toISODate(new Date(anchorDate.getFullYear(), 0, 1)));
   });
 
+  it("jumps to the chosen day and switches to day view via gotoDay", () => {
+    const { result } = renderHook(() => useAgendaView());
+
+    act(() => result.current.setView("year"));
+    act(() => result.current.gotoDay("2026-03-07"));
+
+    expect(result.current.view).toBe("day");
+    expect(result.current.anchor).toBe("2026-03-07");
+  });
+
   it("opens and closes the appointment modal", () => {
     const { result } = renderHook(() => useAgendaView());
 

@@ -29,7 +29,9 @@ export function useYearGrid(
       return {
         iso,
         dayNum: d.getDate(),
-        hasAppt: appointments.some((a) => a.date === iso),
+        // Solo cuenta citas activas — una cancelada no debería leerse como
+        // "día ocupado" en el pantallazo anual.
+        count: appointments.filter((a) => a.date === iso && a.status === "scheduled").length,
         blackout: isDateBlackedOut(iso, blackoutPeriods),
       };
     });

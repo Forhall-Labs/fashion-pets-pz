@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { MenuIcon } from "@/modules/shared/components/MenuIcon";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 
 import { NAV_LINKS, useAppShell } from "./hooks/useAppShell";
 
@@ -11,7 +12,8 @@ import { NAV_LINKS, useAppShell } from "./hooks/useAppShell";
 // docs/prototype/prototype.html — la navegación real ahora la maneja
 // next/navigation en vez de mostrar/ocultar <section data-screen>.
 export function AppShell({ children }: { children: ReactNode }) {
-  const { navOpen, checkingSession, isActive, closeNav, toggleNav, logout } = useAppShell();
+  const { navOpen, checkingSession, loggingOut, isActive, closeNav, toggleNav, logout } =
+    useAppShell();
 
   if (checkingSession) {
     return null;
@@ -36,8 +38,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <button className="btn btn-ghost btn-sm" onClick={logout}>
-          Salir
+        <button className="btn btn-ghost btn-sm" onClick={logout} disabled={loggingOut}>
+          {loggingOut ? <PawPrintsSpinner /> : "Salir"}
         </button>
       </header>
 

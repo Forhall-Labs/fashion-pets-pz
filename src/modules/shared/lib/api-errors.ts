@@ -18,3 +18,15 @@ export function translateApiError(err: unknown): string {
   }
   return "Ocurrió un error. Intentá de nuevo.";
 }
+
+// 409 de AppointmentValidationService trae un mensaje específico y
+// accionable (horario/capacidad/blackout/overlap) — se muestra tal cual en
+// vez del genérico de translateApiError(). Compartido entre el form manual
+// (useAppointmentForm) y el reprogramado por drag-and-drop
+// (useRescheduleAppointment), que disparan el mismo motor de validación.
+export function translateAppointmentError(err: unknown): string {
+  if (err instanceof ApiError && err.status === 409) {
+    return err.messages.join(" ");
+  }
+  return translateApiError(err);
+}

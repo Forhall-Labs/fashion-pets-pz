@@ -18,6 +18,7 @@ export function useAppShell() {
   const router = useRouter();
   const [navOpen, setNavOpen] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -49,9 +50,10 @@ export function useAppShell() {
   }
 
   async function logout() {
+    setLoggingOut(true);
     await supabase.auth.signOut();
     router.push("/login");
   }
 
-  return { navOpen, checkingSession, isActive, closeNav, toggleNav, logout };
+  return { navOpen, checkingSession, loggingOut, isActive, closeNav, toggleNav, logout };
 }

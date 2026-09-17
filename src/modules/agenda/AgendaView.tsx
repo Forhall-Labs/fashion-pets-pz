@@ -5,11 +5,16 @@ import type { ReactNode } from "react";
 
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
+import { ErrorModal } from "@/modules/shared/components/ErrorModal";
+import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
+import { formatDateLong, toISODate } from "@/modules/shared/lib/date-utils";
+import { useRescheduleAppointment } from "@/modules/shared/hooks/useRescheduleAppointment";
 import type { Appointment } from "@/modules/shared/types";
 
-import { RbcCalendar } from "./RbcCalendar";
+import { RbcCalendar, type PendingMove } from "./RbcCalendar";
 import { TodayAgendaPanel } from "./TodayAgendaPanel";
 import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
@@ -18,8 +23,9 @@ import { useAgendaData } from "./hooks/useAgendaData";
 // Puerto de la pantalla Agenda (screen-header + agenda-toolbar +
 // #calendar-root) de docs/prototype/prototype.html + renderAgenda() de
 // app.js — Día/Semana/Mes ahora corren sobre react-big-calendar (ver
-// RbcCalendar.tsx) contra datos reales; Año sigue siendo el grid custom.
-// Drag-and-drop queda para la próxima etapa (Sprint 4).
+// RbcCalendar.tsx) contra datos reales, con drag-and-drop (HU-2.3) vía el
+// addon oficial de la librería; Año sigue siendo el grid custom, con
+// contador por día + drill-down (HU-2.1).
 export function AgendaView() {
   const {
     view,
@@ -34,6 +40,7 @@ export function AgendaView() {
     shift,
     goToToday,
     gotoMonth,
+    gotoDay,
   } = useAgendaView();
 
   const {
@@ -50,6 +57,19 @@ export function AgendaView() {
   const [formState, setFormState] = useState<
     { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
   >(null);
+
+  const {
+    reschedule,
+    submitting: rescheduling,
+    error: rescheduleError,
+    clearError: clearRescheduleError,
+  } = useRescheduleAppointment();
+
+  // Confirmación explícita antes de reprogramar por drag-and-drop, a pedido:
+  // el tile se mueve al toque al soltar (pendingMove, ver RbcCalendar.tsx),
+  // pero el PATCH no sale hasta que el usuario confirma acá — así el punto
+  // en el que "esto ya se guardó" queda inequívoco.
+  const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
 
   let grid: ReactNode;
   if (loading) {
@@ -75,6 +95,7 @@ export function AgendaView() {
         blackoutPeriods={blackoutPeriods}
         year={anchorDate.getFullYear()}
         onGotoMonth={gotoMonth}
+        onGotoDay={gotoDay}
       />
     );
   } else {
@@ -98,6 +119,9 @@ export function AgendaView() {
           petsById={petsById}
           blackoutPeriods={blackoutPeriods}
           onOpenAppointment={openAppointment}
+          pendingMove={pendingMove}
+          onDropPending={setPendingMove}
+          onDrillDown={(d) => gotoDay(toISODate(d))}
         />
       </>
     );
@@ -175,6 +199,51 @@ export function AgendaView() {
           appointment={formState.mode === "edit" ? formState.appointment : null}
           presetDate={formState.mode === "create" ? formState.presetDate : undefined}
           onClose={() => setFormState(null)}
+        />
+      ) : null}
+
+      {pendingMove ? (
+        <Modal onClose={() => setPendingMove(null)} blocking>
+          <ModalHeader title="Confirmar reprogramación" />
+          <p className="modal-body-text">
+            ¿Mover la cita de <strong>{pendingMove.petName}</strong> a{" "}
+            {formatDateLong(pendingMove.date)} a las {pendingMove.startTime}?
+          </p>
+          <div className="modal-actions">
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPendingMove(null)}
+              disabled={rescheduling}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-primary"
+              disabled={rescheduling}
+              onClick={() => {
+                // El modal se queda abierto (con feedback de "Guardando…")
+                // hasta que el PATCH efectivamente vuelve — recién ahí, en
+                // onSettled, se limpia pendingMove. Si el backend rechaza el
+                // move, useRescheduleAppointment ya revirtió el cache y
+                // rescheduleError muestra el ErrorModal de abajo.
+                reschedule(
+                  pendingMove.appointmentId,
+                  { date: pendingMove.date, startTime: pendingMove.startTime },
+                  { onSettled: () => setPendingMove(null) },
+                );
+              }}
+            >
+              {rescheduling ? <PawPrintsSpinner /> : "Confirmar"}
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+
+      {rescheduleError ? (
+        <ErrorModal
+          title="No se pudo reprogramar"
+          message={rescheduleError}
+          onClose={clearRescheduleError}
         />
       ) : null}
     </section>
