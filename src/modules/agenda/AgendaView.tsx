@@ -6,13 +6,14 @@ import type { ReactNode } from "react";
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
+import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
-import { toISODate } from "@/modules/shared/lib/date-utils";
+import { formatDateLong, toISODate } from "@/modules/shared/lib/date-utils";
 import { useRescheduleAppointment } from "@/modules/shared/hooks/useRescheduleAppointment";
 import type { Appointment } from "@/modules/shared/types";
 
-import { RbcCalendar } from "./RbcCalendar";
+import { RbcCalendar, type PendingMove } from "./RbcCalendar";
 import { TodayAgendaPanel } from "./TodayAgendaPanel";
 import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
@@ -62,6 +63,12 @@ export function AgendaView() {
     clearError: clearRescheduleError,
   } = useRescheduleAppointment();
 
+  // Confirmación explícita antes de reprogramar por drag-and-drop, a pedido:
+  // el tile se mueve al toque al soltar (pendingMove, ver RbcCalendar.tsx),
+  // pero el PATCH no sale hasta que el usuario confirma acá — así el punto
+  // en el que "esto ya se guardó" queda inequívoco.
+  const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
+
   let grid: ReactNode;
   if (loading) {
     grid = <WalkingDogLoader />;
@@ -110,7 +117,8 @@ export function AgendaView() {
           petsById={petsById}
           blackoutPeriods={blackoutPeriods}
           onOpenAppointment={openAppointment}
-          onReschedule={reschedule}
+          pendingMove={pendingMove}
+          onDropPending={setPendingMove}
           onDrillDown={(d) => gotoDay(toISODate(d))}
         />
       </>
@@ -190,6 +198,33 @@ export function AgendaView() {
           presetDate={formState.mode === "create" ? formState.presetDate : undefined}
           onClose={() => setFormState(null)}
         />
+      ) : null}
+
+      {pendingMove ? (
+        <Modal onClose={() => setPendingMove(null)} blocking>
+          <ModalHeader title="Confirmar reprogramación" />
+          <p className="modal-body-text">
+            ¿Mover la cita de <strong>{pendingMove.petName}</strong> a{" "}
+            {formatDateLong(pendingMove.date)} a las {pendingMove.startTime}?
+          </p>
+          <div className="modal-actions">
+            <button className="btn btn-ghost" onClick={() => setPendingMove(null)}>
+              Cancelar
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                reschedule(pendingMove.appointmentId, {
+                  date: pendingMove.date,
+                  startTime: pendingMove.startTime,
+                });
+                setPendingMove(null);
+              }}
+            >
+              Confirmar
+            </button>
+          </div>
+        </Modal>
       ) : null}
 
       {rescheduleError ? (

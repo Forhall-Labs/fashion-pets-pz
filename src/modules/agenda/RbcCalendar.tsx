@@ -76,6 +76,15 @@ function toDateTime(date: string, time: string): Date {
   return new Date(`${date}T${time}`);
 }
 
+// Cita recién soltada, todavía sin confirmar por el usuario — ver comentario
+// sobre pendingMove más abajo.
+export interface PendingMove {
+  appointmentId: string;
+  petName: string;
+  date: string;
+  startTime: string;
+}
+
 interface RbcCalendarProps {
   view: "day" | "week" | "month";
   date: Date;
@@ -83,15 +92,9 @@ interface RbcCalendarProps {
   petsById: Map<string, Pet>;
   blackoutPeriods: BlackoutPeriod[];
   onOpenAppointment: (id: string) => void;
-  onReschedule: (id: string, input: { date: string; startTime: string }) => void;
+  pendingMove: PendingMove | null;
+  onDropPending: (move: PendingMove) => void;
   onDrillDown: (date: Date) => void;
-}
-
-// Solo citas activas se pueden arrastrar — refuerza en la UI la misma
-// guardia que AppointmentsService.update() aplica del lado del backend
-// (una cita cancelada/completada no se puede reprogramar).
-function draggableAccessor(event: RbcEvent) {
-  return event.resource.appt.status === "scheduled";
 }
 
 export function RbcCalendar({
@@ -101,30 +104,54 @@ export function RbcCalendar({
   petsById,
   blackoutPeriods,
   onOpenAppointment,
-  onReschedule,
+  pendingMove,
+  onDropPending,
   onDrillDown,
 }: RbcCalendarProps) {
   const dayPropGetter = useMemo(() => makeDayPropGetter(blackoutPeriods), [blackoutPeriods]);
+  // Al arrastrar, el tile se mueve al toque (esta lista ya sale con la fecha/
+  // hora nueva) pero todavía no se manda ningún PATCH — eso queda para
+  // cuando el usuario confirma en el modal que AgendaView abre al recibir
+  // onDropPending. `pendingMove` es puramente local a esta pantalla (no toca
+  // el cache de React Query); si el usuario cancela, alcanza con que
+  // AgendaView lo limpie para que el tile vuelva solo a su lugar.
   const events = useMemo<RbcEvent[]>(() => {
     const result: RbcEvent[] = [];
     for (const appt of appointments) {
       const pet = petsById.get(appt.petId);
       if (!pet) continue; // pet borrado: no se pinta un tile roto en el grid
-      const start = toDateTime(appt.date, appt.startTime);
+      const effective =
+        pendingMove?.appointmentId === appt.id
+          ? { ...appt, date: pendingMove.date, startTime: pendingMove.startTime }
+          : appt;
+      const start = toDateTime(effective.date, effective.startTime);
       result.push({
         id: appt.id,
         title: pet.name,
         start,
-        end: new Date(start.getTime() + appt.durationMinutes * 60_000),
-        resource: { appt, pet },
+        end: new Date(start.getTime() + effective.durationMinutes * 60_000),
+        resource: { appt: effective, pet },
       });
     }
     return result;
-  }, [appointments, petsById]);
+  }, [appointments, petsById, pendingMove]);
 
   function handleEventDrop({ event, start }: EventInteractionArgs<RbcEvent>) {
     const startDate = new Date(start);
-    onReschedule(event.id, { date: toISODate(startDate), startTime: timeOfDay(startDate) });
+    onDropPending({
+      appointmentId: event.id,
+      petName: event.resource.pet.name,
+      date: toISODate(startDate),
+      startTime: timeOfDay(startDate),
+    });
+  }
+
+  // Solo citas activas se pueden arrastrar (refuerza en la UI la misma
+  // guardia que AppointmentsService.update() aplica del lado del backend),
+  // y mientras haya un move sin confirmar se bloquea un segundo drag para no
+  // encimar dos confirmaciones pendientes.
+  function draggableAccessor(event: RbcEvent) {
+    return !pendingMove && event.resource.appt.status === "scheduled";
   }
 
   return (
