@@ -209,11 +209,18 @@ export function usePetForm({
     setDuplicateName(null);
   }
 
+  // setStage("form") antes de mutate() (no en onSuccess/onError) para que el
+  // botón "Guardar" del form base — ya cableado a submitting/PawPrintsSpinner
+  // — se haga cargo del feedback visual apenas se elige una opción acá, en
+  // vez de dejar este modal de conflicto sin ningún indicio de que ya está
+  // guardando (mismo patrón que confirmDuplicateName).
   function keepAppointments() {
+    setStage("form");
     mutation.mutate({ input: buildInput(getValues()), cancelFutureAppointments: false });
   }
 
   function regenerateAppointments() {
+    setStage("form");
     mutation.mutate({ input: buildInput(getValues()), cancelFutureAppointments: true });
   }
 

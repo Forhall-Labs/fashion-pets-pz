@@ -13,6 +13,7 @@ import {
 import { formatDateLong } from "../lib/date-utils";
 import { Modal, ModalHeader } from "./Modal";
 import { MapPinIcon } from "./MapPinIcon";
+import { PawPrintsSpinner } from "./PawPrintsSpinner";
 import { WalkingDogLoader } from "./WalkingDogLoader";
 import { WarningIcon } from "./WarningIcon";
 import { appointmentsApi } from "../lib/appointments-api";
@@ -158,7 +159,7 @@ export function AppointmentDetailModal({
               onClick={() => cancelMutation.mutate()}
               disabled={cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? "Cancelando…" : "Cancelar cita"}
+              {cancelMutation.isPending ? <PawPrintsSpinner /> : "Cancelar cita"}
             </button>
           </>
         ) : null}
