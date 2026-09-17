@@ -7,6 +7,7 @@ import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentD
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
+import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
 import { formatDateLong, toISODate } from "@/modules/shared/lib/date-utils";
@@ -232,7 +233,7 @@ export function AgendaView() {
                 );
               }}
             >
-              {rescheduling ? "Guardando…" : "Confirmar"}
+              {rescheduling ? <PawPrintsSpinner /> : "Confirmar"}
             </button>
           </div>
         </Modal>
