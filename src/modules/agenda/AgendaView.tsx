@@ -59,6 +59,7 @@ export function AgendaView() {
 
   const {
     reschedule,
+    submitting: rescheduling,
     error: rescheduleError,
     clearError: clearRescheduleError,
   } = useRescheduleAppointment();
@@ -208,20 +209,30 @@ export function AgendaView() {
             {formatDateLong(pendingMove.date)} a las {pendingMove.startTime}?
           </p>
           <div className="modal-actions">
-            <button className="btn btn-ghost" onClick={() => setPendingMove(null)}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPendingMove(null)}
+              disabled={rescheduling}
+            >
               Cancelar
             </button>
             <button
               className="btn btn-primary"
+              disabled={rescheduling}
               onClick={() => {
-                reschedule(pendingMove.appointmentId, {
-                  date: pendingMove.date,
-                  startTime: pendingMove.startTime,
-                });
-                setPendingMove(null);
+                // El modal se queda abierto (con feedback de "Guardando…")
+                // hasta que el PATCH efectivamente vuelve — recién ahí, en
+                // onSettled, se limpia pendingMove. Si el backend rechaza el
+                // move, useRescheduleAppointment ya revirtió el cache y
+                // rescheduleError muestra el ErrorModal de abajo.
+                reschedule(
+                  pendingMove.appointmentId,
+                  { date: pendingMove.date, startTime: pendingMove.startTime },
+                  { onSettled: () => setPendingMove(null) },
+                );
               }}
             >
-              Confirmar
+              {rescheduling ? "Guardando…" : "Confirmar"}
             </button>
           </div>
         </Modal>

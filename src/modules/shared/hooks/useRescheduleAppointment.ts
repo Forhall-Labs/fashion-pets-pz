@@ -55,10 +55,15 @@ export function useRescheduleAppointment() {
   });
 
   return {
-    reschedule: (id: string, input: Partial<AppointmentInput>) => {
+    reschedule: (
+      id: string,
+      input: Partial<AppointmentInput>,
+      callbacks?: { onSettled?: () => void },
+    ) => {
       setError(null);
-      mutation.mutate({ id, input });
+      mutation.mutate({ id, input }, { onSettled: callbacks?.onSettled });
     },
+    submitting: mutation.isPending,
     error,
     clearError: () => setError(null),
   };
