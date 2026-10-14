@@ -238,6 +238,8 @@ export function useBlackouts() {
     cancelEdit,
     busy: checkConflicts.isPending || persist.isPending,
     saving: persist.isPending,
+    // Qué botón del modal de conflictos muestra el spinner.
+    savingResolution: persist.isPending ? (persist.variables?.resolution ?? null) : null,
     step,
     closeStep: () => setStep(null),
     confirmPast,

@@ -177,25 +177,30 @@ function BlackoutStepModal({ b }: { b: ReturnType<typeof useBlackouts> }) {
             Volver
           </button>
           <button
-            className="btn btn-secondary"
-            disabled
-            title="Disponible con el motor de agendamiento automático"
+            className={`btn btn-secondary ${b.savingResolution === "reschedule" ? "btn-loading" : ""}`}
+            onClick={() => b.resolveAppointments("reschedule")}
+            disabled={b.saving}
+            title="Mueve cada cita al día libre más cercano después del bloqueo"
           >
-            Reprogramar automáticamente
+            {b.savingResolution === "reschedule" ? (
+              <PawPrintsSpinner />
+            ) : (
+              "Reprogramar automáticamente"
+            )}
           </button>
           <button
             className="btn btn-secondary"
             onClick={() => b.resolveAppointments("keep")}
             disabled={b.saving}
           >
-            Dejarlas como excepción
+            {b.savingResolution === "keep" ? <PawPrintsSpinner /> : "Dejarlas como excepción"}
           </button>
           <button
-            className={`btn btn-destructive ${b.saving ? "btn-loading" : ""}`}
+            className={`btn btn-destructive ${b.savingResolution === "cancel" ? "btn-loading" : ""}`}
             onClick={() => b.resolveAppointments("cancel")}
             disabled={b.saving}
           >
-            {b.saving ? <PawPrintsSpinner /> : "Cancelarlas"}
+            {b.savingResolution === "cancel" ? <PawPrintsSpinner /> : "Cancelarlas"}
           </button>
         </div>
       </Modal>
