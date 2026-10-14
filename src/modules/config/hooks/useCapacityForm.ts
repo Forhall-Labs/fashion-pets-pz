@@ -13,7 +13,6 @@ import { useShopConfigSave } from "./useShopConfigSave";
 
 // HU-4.2 — capacidad diaria (+ duración del servicio rápido, misma card).
 export function useCapacityForm(config: ShopConfig | undefined) {
-  const save = useShopConfigSave("capacity");
   const form = useForm<CapacityFormValues>({
     resolver: zodResolver(capacityFormSchema),
     // `values` re-sincroniza el form cuando llega (o cambia) la config.
@@ -25,6 +24,9 @@ export function useCapacityForm(config: ShopConfig | undefined) {
       : undefined,
     defaultValues: { maxPetsPerDay: "", quickServiceDurationMinutes: "" },
   });
+
+  // reset() sin argumentos vuelve a `values` (la config guardada).
+  const save = useShopConfigSave("capacity", () => form.reset());
 
   const handleSubmit = form.handleSubmit((values) =>
     save.submit({

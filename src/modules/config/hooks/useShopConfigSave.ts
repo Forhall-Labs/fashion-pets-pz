@@ -29,7 +29,9 @@ function hasImpact(impact: ShopConfigImpact): boolean {
 //   2. si hay impacto, avisar — nunca se cancela ni se mueve nada,
 //   3. PATCH, con el spinner hasta que responde el servidor,
 //   4. refrescar la agenda (y avisar si ese refresco falla).
-export function useShopConfigSave(kind: ImpactKind) {
+// `onCancel`: el Admin descartó el cambio desde un modal — el form vuelve a
+// mostrar el valor guardado en vez de quedarse con el que no se guardó.
+export function useShopConfigSave(kind: ImpactKind, onCancel?: () => void) {
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<{
     input: ShopConfigInput;
@@ -109,11 +111,17 @@ export function useShopConfigSave(kind: ImpactKind) {
     saved,
     pending,
     confirmPending,
-    cancelPending: () => setPending(null),
+    cancelPending: () => {
+      setPending(null);
+      onCancel?.();
+    },
     scanFailed: scanFailedFor != null,
     retryScan,
     saveWithoutScan,
-    dismissScanFailed: () => setScanFailedFor(null),
+    dismissScanFailed: () => {
+      setScanFailedFor(null);
+      onCancel?.();
+    },
     error,
     clearError: () => setError(null),
     refreshFailed,

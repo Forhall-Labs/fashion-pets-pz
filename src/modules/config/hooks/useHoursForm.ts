@@ -10,12 +10,14 @@ import { useShopConfigSave } from "./useShopConfigSave";
 
 // HU-4.3 — horario de atención.
 export function useHoursForm(config: ShopConfig | undefined) {
-  const save = useShopConfigSave("hours");
   const form = useForm<HoursFormValues>({
     resolver: zodResolver(hoursFormSchema),
     values: config ? { openTime: config.openTime, closeTime: config.closeTime } : undefined,
     defaultValues: { openTime: "", closeTime: "" },
   });
+
+  // reset() sin argumentos vuelve a `values` (la config guardada).
+  const save = useShopConfigSave("hours", () => form.reset());
 
   const handleSubmit = form.handleSubmit((values) => save.submit(values));
 
