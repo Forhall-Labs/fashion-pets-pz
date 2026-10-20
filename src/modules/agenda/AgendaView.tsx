@@ -14,11 +14,13 @@ import { formatDateLong, toISODate } from "@/modules/shared/lib/date-utils";
 import { useRescheduleAppointment } from "@/modules/shared/hooks/useRescheduleAppointment";
 import type { Appointment } from "@/modules/shared/types";
 
+import { GenerateYearModal } from "./GenerateYearModal";
 import { RbcCalendar, type PendingMove } from "./RbcCalendar";
 import { TodayAgendaPanel } from "./TodayAgendaPanel";
 import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
 import { useAgendaData } from "./hooks/useAgendaData";
+import { useGenerateYear } from "./hooks/useGenerateYear";
 
 // Puerto de la pantalla Agenda (screen-header + agenda-toolbar +
 // #calendar-root) de docs/prototype/prototype.html + renderAgenda() de
@@ -53,6 +55,8 @@ export function AgendaView() {
     error,
     refetch,
   } = useAgendaData(view, anchor, anchorDate, weekDays);
+
+  const generateYear = useGenerateYear();
 
   const [formState, setFormState] = useState<
     { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
@@ -131,12 +135,18 @@ export function AgendaView() {
     <section className="screen" data-screen="agenda">
       <div className="screen-header">
         <h1 className="text-h1">Agenda</h1>
-        <button
-          className="btn btn-primary"
-          onClick={() => setFormState({ mode: "create", presetDate: anchor })}
-        >
-          + Nueva cita
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* El año real lo decide el servidor (zona de Costa Rica); esto es solo la etiqueta. */}
+          <button className="btn btn-secondary" onClick={generateYear.start}>
+            Programar agenda {new Date().getFullYear() + 1}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setFormState({ mode: "create", presetDate: anchor })}
+          >
+            + Nueva cita
+          </button>
+        </div>
       </div>
 
       <div className="agenda-toolbar">
@@ -238,6 +248,8 @@ export function AgendaView() {
           </div>
         </Modal>
       ) : null}
+
+      {generateYear.open ? <GenerateYearModal g={generateYear} /> : null}
 
       {rescheduleError ? (
         <ErrorModal

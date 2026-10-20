@@ -117,6 +117,7 @@ export function AppointmentDetailModal({
       </p>
       <p className="text-small">
         {formatDateLong(appt.date)} · {appt.startTime} ({appt.durationMinutes} min)
+        {appt.source === "auto_scheduled" ? " · Origen: automática" : null}
       </p>
       {appt.flaggedReason ? <p className="text-small">{appt.flaggedReason}</p> : null}
       {pet.needsPickup ? (
