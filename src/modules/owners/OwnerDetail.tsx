@@ -99,6 +99,12 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
           </div>
           <p className="text-small">{owner.phone}</p>
           <p className="text-small">{owner.address || "Sin dirección registrada"}</p>
+          {owner.address && owner.lat == null ? (
+            <p className="text-small" style={{ color: "var(--color-accent-text)" }}>
+              No se pudo ubicar esta dirección en el mapa de Costa Rica: revisala para que entre en
+              la ruta de pickups.
+            </p>
+          ) : null}
           <p className="text-small">
             Día fijo de visita:{" "}
             {owner.fixedVisitDay ? DAY_LABEL[owner.fixedVisitDay] : "Sin preferencia"}
@@ -165,6 +171,12 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
               pets.map((p) => {
                 const resolvedLocation = p.locationAddress || owner.address;
                 const locationMissing = p.needsPickup && !resolvedLocation;
+                // La ubicación que se usa no tiene coordenadas: el geocoding
+                // al guardar no la encontró (Épica 6).
+                const notOnMap =
+                  p.needsPickup &&
+                  Boolean(resolvedLocation) &&
+                  (p.locationAddress ? p.lat == null : owner.lat == null);
                 return (
                   <div className="card pet-card" key={p.id}>
                     <div className="pet-card-main">
@@ -173,6 +185,11 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
                       <span className="text-small">
                         Ubicación: {resolvedLocation || "Sin ubicación"}
                       </span>
+                      {notOnMap ? (
+                        <span className="text-small" style={{ color: "var(--color-accent-text)" }}>
+                          No se pudo ubicar en el mapa — revisá la dirección.
+                        </span>
+                      ) : null}
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
                         <SizeBadge size={p.size} />
                         {p.isAggressive ? <AggressiveBadge /> : null}

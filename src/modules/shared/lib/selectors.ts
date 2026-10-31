@@ -25,24 +25,6 @@ export function isIncomplete(pet: Pet) {
   return !pet.groomingFrequency || !pet.avgServiceDuration;
 }
 
-export interface PetLocation {
-  lat: number | null;
-  lng: number | null;
-  address: string | null;
-  has: boolean;
-}
-
-export function petLocation(data: MockData, pet: Pet): PetLocation {
-  if (pet.lat != null && pet.lng != null) {
-    return { lat: pet.lat, lng: pet.lng, address: pet.locationAddress, has: true };
-  }
-  const owner = getOwner(data, pet.ownerId);
-  if (owner && owner.lat != null && owner.lng != null) {
-    return { lat: owner.lat, lng: owner.lng, address: owner.address, has: true };
-  }
-  return { lat: null, lng: null, address: null, has: false };
-}
-
 export function isBlackoutDate(data: MockData, iso: string) {
   return data.blackoutPeriods.some((b) => iso >= b.startDate && iso <= b.endDate);
 }
