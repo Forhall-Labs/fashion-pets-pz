@@ -5,10 +5,13 @@ import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-quer
 
 import { translateAppointmentError } from "../lib/api-errors";
 import { appointmentsApi, type AppointmentInput } from "../lib/appointments-api";
+import { announceVacatedSlot } from "../lib/vacated-slot";
 import type { Appointment } from "../types";
 
 interface RescheduleContext {
   previous: [QueryKey, Appointment[] | undefined][];
+  /** La cita antes de moverla, para saber qué lugar quedó libre. */
+  before: Appointment | undefined;
 }
 
 // Reprogramar por drag-and-drop (HU-2.3) es un PATCH normal — mismo
@@ -38,10 +41,17 @@ export function useRescheduleAppointment() {
     onMutate: async ({ id, input }) => {
       await queryClient.cancelQueries({ queryKey: ["appointments"] });
       const previous = queryClient.getQueriesData<Appointment[]>({ queryKey: ["appointments"] });
+      const before = previous.flatMap(([, data]) => data ?? []).find((appt) => appt.id === id);
       queryClient.setQueriesData<Appointment[]>({ queryKey: ["appointments"] }, (old) =>
         old?.map((appt) => (appt.id === id ? { ...appt, ...input } : appt)),
       );
-      return { previous };
+      return { previous, before };
+    },
+    onSuccess: (moved, _vars, context) => {
+      // HU-5.2: moverla a otro día deja libre el lugar original.
+      if (context.before && context.before.date !== moved.date) {
+        announceVacatedSlot(context.before);
+      }
     },
     onError: (err, _vars, context) => {
       context?.previous.forEach(([queryKey, data]) => {

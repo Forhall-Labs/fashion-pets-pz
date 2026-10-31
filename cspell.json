@@ -120,7 +120,11 @@
     "instanciarlo",
     "recalcula",
     "tipeó",
-    "inferría"
+    "inferría",
+    "Cargáselo",
+    "Revisalo",
+    "confirmalo",
+    "nosize"
   ],
   "ignorePaths": [
     "node_modules",

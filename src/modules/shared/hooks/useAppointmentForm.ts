@@ -10,10 +10,9 @@ import { appointmentFormSchema, type AppointmentFormValues } from "../lib/appoin
 import { appointmentsApi, type AppointmentInput } from "../lib/appointments-api";
 import { fromISODate, minutesToTime, timeToMinutes } from "../lib/date-utils";
 import { DAY_LABEL, DAY_OPTIONS } from "../lib/labels";
-import { ownersApi } from "../lib/owners-api";
-import { petsApi } from "../lib/pets-api";
 import { shopConfigApi } from "../lib/shop-config-api";
 import type { Appointment, ServiceType, Weekday } from "../types";
+import { usePetOptions } from "./usePetOptions";
 
 function weekdayOf(iso: string): Weekday {
   const jsDay = fromISODate(iso).getDay(); // 0=domingo..6=sábado
@@ -43,35 +42,7 @@ export function useAppointmentForm({
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID()).current;
 
-  const petsQuery = useQuery({
-    // 100 es el máximo que acepta PaginationQueryDto (@Max(100) en el
-    // backend) — ver la misma nota en useAgendaData.ts.
-    queryKey: ["pets", { limit: 100 }],
-    queryFn: () => petsApi.list({ limit: 100 }),
-  });
-  // Se pide en paralelo con petsQuery (no encadenada) solo para armar
-  // "Nombre — Dueño" en el select y desambiguar mascotas con el mismo
-  // nombre en dueños distintos (caso real: dos "Chocolate"). Un solo
-  // request extra, reusa GET /owners tal cual ya existe — no hace falta
-  // tocar el backend ni pedir el dueño mascota por mascota.
-  const ownersQuery = useQuery({
-    queryKey: ["owners", { limit: 100 }],
-    queryFn: () => ownersApi.list({ limit: 100 }),
-  });
-  const ownersById = useMemo(
-    () => new Map(ownersQuery.data?.data.map((o) => [o.id, o]) ?? []),
-    [ownersQuery.data],
-  );
-  const petOptions = useMemo(
-    () =>
-      (petsQuery.data?.data ?? []).map((p) => ({
-        id: p.id,
-        label: ownersById.has(p.ownerId)
-          ? `${p.name} — ${ownersById.get(p.ownerId)!.name}`
-          : p.name,
-      })),
-    [petsQuery.data, ownersById],
-  );
+  const { pets, ownersById, petOptions, loading: petsLoading } = usePetOptions();
   const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
 
   const {
@@ -144,7 +115,7 @@ export function useAppointmentForm({
   // también al crear diría algo que después el guardado no cumple.
   const dayDeviationWarning = (() => {
     if (!editing || !date) return null;
-    const pet = petsQuery.data?.data.find((p) => p.id === petId);
+    const pet = pets.find((p) => p.id === petId);
     const owner = pet ? ownersById.get(pet.ownerId) : undefined;
     if (!owner?.fixedVisitDay) return null;
     if (weekdayOf(date) === owner.fixedVisitDay) return null;
@@ -158,7 +129,7 @@ export function useAppointmentForm({
       if (quick) setValue("durationMinutes", String(quick));
       return;
     }
-    const pet = petsQuery.data?.data.find((p) => p.id === nextPetId);
+    const pet = pets.find((p) => p.id === nextPetId);
     if (pet?.avgServiceDuration) setValue("durationMinutes", String(pet.avgServiceDuration));
   }
 
@@ -202,11 +173,7 @@ export function useAppointmentForm({
     registerDuration: register("durationMinutes", { onChange: () => setDurationTouched(true) }),
     errors,
     petOptions,
-    // Combinado a propósito: si solo mirara petsQuery, el select mostraría
-    // los nombres pelados un instante y les pegaría "— Dueño" después, en
-    // vez de aparecer ya completos (mismo tipo de parpadeo que el detalle
-    // de cita, arreglado en useAppointmentDetailModal.ts).
-    petsLoading: petsQuery.isLoading || ownersQuery.isLoading,
+    petsLoading,
     petId,
     serviceType,
     quickServiceDisabled: shopConfigQuery.data

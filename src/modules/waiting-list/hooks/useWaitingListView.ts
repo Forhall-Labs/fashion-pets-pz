@@ -1,18 +1,41 @@
 "use client";
 
-import { mockData, TODAY_ISO } from "@/modules/shared/lib/mock-data";
-import { daysBetween, getOwner, getPet } from "@/modules/shared/lib/selectors";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Puerto de la pantalla "Lista de Espera" (renderWaitingList() en app.js).
+import { waitingListApi, type WaitingEntry } from "@/modules/shared/lib/waiting-list-api";
+
+export function waitingDays(createdAt: string, now = Date.now()) {
+  return Math.max(0, Math.floor((now - Date.parse(createdAt)) / 86_400_000));
+}
+
+// Pantalla "Lista de espera" (HU-5.1) contra la API real.
 export function useWaitingListView() {
-  const active = mockData.waitingList
-    .filter((w) => w.status === "active")
-    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))
-    .map((w) => {
-      const pet = getPet(mockData, w.petId)!;
-      const owner = getOwner(mockData, pet.ownerId)!;
-      return { ...w, pet, owner, waitingDays: daysBetween(w.createdAt, TODAY_ISO) };
-    });
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<{ entry: WaitingEntry | null } | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
-  return { active };
+  const query = useQuery({ queryKey: ["waiting-list"], queryFn: waitingListApi.list });
+  const removeMutation = useMutation({
+    mutationFn: waitingListApi.remove,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["waiting-list"] }),
+    onError: () => setRemoveError("No se pudo quitar de la lista. Probá de nuevo."),
+  });
+
+  return {
+    entries: query.data ?? [],
+    loading: query.isLoading,
+    loadError: query.isError,
+    reload: () => void query.refetch(),
+    form,
+    openNew: () => setForm({ entry: null }),
+    openEdit: (entry: WaitingEntry) => setForm({ entry }),
+    closeForm: () => setForm(null),
+    remove: (id: string) => {
+      setRemoveError(null);
+      removeMutation.mutate(id);
+    },
+    removingId: removeMutation.isPending ? removeMutation.variables : null,
+    removeError,
+  };
 }

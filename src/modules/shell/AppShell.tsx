@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { MenuIcon } from "@/modules/shared/components/MenuIcon";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
+import { VacatedSlotHost } from "@/modules/shared/components/SlotRecommendationModal";
 
 import { NAV_LINKS, useAppShell } from "./hooks/useAppShell";
 
@@ -50,6 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="main-content" id="main-content">
         {children}
       </main>
+      <VacatedSlotHost />
     </div>
   );
 }

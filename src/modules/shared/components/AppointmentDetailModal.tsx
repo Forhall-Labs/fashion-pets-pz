@@ -17,6 +17,7 @@ import { PawPrintsSpinner } from "./PawPrintsSpinner";
 import { WalkingDogLoader } from "./WalkingDogLoader";
 import { WarningIcon } from "./WarningIcon";
 import { appointmentsApi } from "../lib/appointments-api";
+import { announceVacatedSlot } from "../lib/vacated-slot";
 import { useAppointmentDetailModal } from "../hooks/useAppointmentDetailModal";
 import type { Appointment } from "../types";
 
@@ -52,6 +53,8 @@ export function AppointmentDetailModal({
     mutationFn: () => appointmentsApi.cancel(appointmentId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      // HU-5.2: el lugar que deja libre se ofrece a la lista de espera.
+      if (appt) announceVacatedSlot(appt);
       onClose();
     },
   });
