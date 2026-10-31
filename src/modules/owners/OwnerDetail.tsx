@@ -18,6 +18,7 @@ import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentD
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
+import { WhatsAppButton } from "@/modules/shared/components/WhatsAppButton";
 import type { Appointment, Pet } from "@/modules/shared/types";
 
 import { OwnerForm } from "./OwnerForm";
@@ -30,7 +31,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
     owner,
     pets,
     upcoming,
-    waLink,
+    whatsApp,
     loading,
     notFound,
     error,
@@ -103,22 +104,7 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
             Día fijo de visita:{" "}
             {owner.fixedVisitDay ? DAY_LABEL[owner.fixedVisitDay] : "Sin preferencia"}
           </p>
-          <a
-            className={`btn btn-secondary btn-sm ${waLink ? "" : "btn-disabled"}`}
-            style={{ marginTop: 8 }}
-            href={waLink ?? undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-disabled={!waLink}
-            onClick={(e) => {
-              if (!waLink) e.preventDefault();
-            }}
-          >
-            Enviar por WhatsApp (todas las próximas)
-          </a>
-          <p className="text-small" style={{ marginTop: 4 }}>
-            Se abrirá WhatsApp con el mensaje listo — vos lo enviás.
-          </p>
+          <WhatsAppButton result={whatsApp} label="Enviar por WhatsApp (todas las próximas)" />
           {upcoming.length ? (
             <>
               <h3 className="text-h3" style={{ marginTop: 16 }}>
