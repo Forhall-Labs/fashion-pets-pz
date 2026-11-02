@@ -35,7 +35,7 @@ function createWrapper() {
 const OWNER = {
   id: "real-owner-uuid",
   name: "María Fernández",
-  phone: "011-4000-0303",
+  phone: "+506 8888-0303",
   address: null,
   lat: null,
   lng: null,
@@ -63,7 +63,7 @@ describe("useOwnerDetail", () => {
     expect(result.current.pets.map((p) => p.name)).toEqual(["Rex"]);
   });
 
-  it("has no upcoming appointments or WhatsApp link when none come back from the API", async () => {
+  it("has no upcoming appointments and explains it on WhatsApp when none come back from the API", async () => {
     getOwner.mockResolvedValue(OWNER);
     listPets.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20 });
 
@@ -71,7 +71,10 @@ describe("useOwnerDetail", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.upcoming).toEqual([]);
-    expect(result.current.waLink).toBeNull();
+    expect(result.current.whatsApp).toEqual({
+      ok: false,
+      error: "Este dueño no tiene próximas citas.",
+    });
   });
 
   it("resolves upcoming appointments against the owner's own pets, sorted by date/time", async () => {
@@ -89,7 +92,8 @@ describe("useOwnerDetail", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.upcoming.map((a) => a.id)).toEqual(["a1", "a2"]);
-    expect(result.current.waLink).toContain("wa.me");
+    const whatsApp = result.current.whatsApp;
+    expect(whatsApp?.ok && whatsApp.messages[0].url).toContain("https://wa.me/50688880303");
   });
 
   it("marks notFound on a 404 without leaving loading stuck", async () => {

@@ -7,7 +7,7 @@ import { ApiError } from "@/modules/shared/lib/api-client";
 import { ownersApi } from "@/modules/shared/lib/owners-api";
 import { petsApi } from "@/modules/shared/lib/pets-api";
 import { appointmentsApi } from "@/modules/shared/lib/appointments-api";
-import { whatsAppLinkForAllUpcoming } from "@/modules/shared/lib/whatsapp";
+import { whatsAppForAllUpcoming } from "@/modules/shared/lib/whatsapp";
 import { toISODate } from "@/modules/shared/lib/date-utils";
 
 // Ventana hacia adelante para "próximas citas" — un año alcanza y sobra
@@ -71,13 +71,13 @@ export function useOwnerDetail(ownerId: string) {
     .map((a) => ({ ...a, pet: pets.find((p) => p.id === a.petId)! }))
     .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
 
-  const waLink = owner ? whatsAppLinkForAllUpcoming(owner, upcoming) : null;
+  const whatsApp = owner ? whatsAppForAllUpcoming(owner, upcoming) : null;
 
   return {
     owner,
     pets,
     upcoming,
-    waLink,
+    whatsApp,
     loading,
     notFound,
     error,
