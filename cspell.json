@@ -126,7 +126,8 @@
     "amón",
     "waze",
     "probá",
-    "travelmode"
+    "travelmode",
+    "agregale"
   ],
   "ignorePaths": [
     "node_modules",

@@ -9,6 +9,17 @@ interface Point {
 
 export class MapLinkError extends Error {}
 
+// Misma caja de Costa Rica que usa el API para excluir paradas de la ruta
+// (SUPPORTED_BOUNDS en pickups.rules.ts) — mantener ambas en sync a mano.
+const SUPPORTED_BOUNDS = { minLat: 5.0, maxLat: 11.4, minLng: -86.1, maxLng: -82.4 };
+
+/** true si hay coordenadas y caen en Costa Rica: la dirección entra en la ruta. */
+export function isInServiceArea(p: { lat: number | null; lng: number | null }): boolean {
+  if (p.lat == null || p.lng == null) return false;
+  const b = SUPPORTED_BOUNDS;
+  return p.lat >= b.minLat && p.lat <= b.maxLat && p.lng >= b.minLng && p.lng <= b.maxLng;
+}
+
 const coord = (p: Point) => `${p.lat},${p.lng}`;
 
 function assertValid(stops: Point[]) {

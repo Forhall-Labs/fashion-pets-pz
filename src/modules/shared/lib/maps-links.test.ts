@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { googleMapsUrl, MapLinkError, wazeUrl } from "./maps-links";
+import { googleMapsUrl, isInServiceArea, MapLinkError, wazeUrl } from "./maps-links";
 
 const A = { lat: 9.93, lng: -84.07 };
 const B = { lat: 9.94, lng: -84.08 };
@@ -34,5 +34,13 @@ describe("googleMapsUrl (HU-6.3)", () => {
 describe("wazeUrl (HU-6.3)", () => {
   it("navigates turn by turn to a single destination", () => {
     expect(wazeUrl(A)).toBe("https://waze.com/ul?ll=9.93%2C-84.07&navigate=yes");
+  });
+});
+
+describe("isInServiceArea", () => {
+  it("accepts coordinates in Costa Rica and rejects missing or foreign ones", () => {
+    expect(isInServiceArea({ lat: 9.37, lng: -83.7 })).toBe(true);
+    expect(isInServiceArea({ lat: null, lng: null })).toBe(false);
+    expect(isInServiceArea({ lat: 6.65, lng: -75.46 })).toBe(false);
   });
 });
