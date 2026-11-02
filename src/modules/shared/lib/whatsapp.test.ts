@@ -65,9 +65,14 @@ describe("whatsAppForAppointment (HU-7.1)", () => {
     expect(result.ok === false && result.error).toMatch(/formato del teléfono no es válido/);
   });
 
-  it("asks for the country code on an 8-digit local number", () => {
+  it("assumes Costa Rica (+506) for an 8-digit local number", () => {
     const result = whatsAppForAppointment(REX, { ...OWNER, phone: "8888-0101" });
-    expect(result.ok === false && result.error).toMatch(/código de país.*\+506/);
+    expect(result.ok && result.messages[0].url).toMatch(/^https:\/\/wa\.me\/50688880101\?/);
+  });
+
+  it("rejects a too-short number", () => {
+    const result = whatsAppForAppointment(REX, { ...OWNER, phone: "8888-010" });
+    expect(result.ok === false && result.error).toMatch(/formato del teléfono no es válido/);
   });
 
   it("accepts a number written with 506 but no plus sign", () => {

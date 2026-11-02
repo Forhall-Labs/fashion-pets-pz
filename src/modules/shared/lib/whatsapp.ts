@@ -10,7 +10,8 @@ import { formatDateLong } from "./date-utils";
 import type { Owner, Pet, ServiceType } from "../types";
 
 // Los clientes son de Costa Rica: un número local tiene 8 dígitos y el código
-// de país es 506. Un número con más dígitos se toma como que ya trae código.
+// de país es 506. Un número con más dígitos se toma como que ya trae código;
+// uno extranjero se tiene que cargar con el suyo (+ adelante).
 const COUNTRY_CODE = "506";
 const LOCAL_DIGITS = 8;
 const MAX_INTERNATIONAL_DIGITS = 15;
@@ -48,8 +49,11 @@ function phoneForWhatsApp(
     return { error: "El formato del teléfono no es válido: solo puede tener números." };
   }
   const digits = raw.replace(/\D/g, "");
+  // Los teléfonos se cargan como locales (8 dígitos, sin +506): se asume
+  // Costa Rica en vez de pedir el código (decisión del usuario, 2026-11-01,
+  // cambia el escenario "Phone number missing a country code" de HU-7.1).
   if (digits.length === LOCAL_DIGITS && !raw.startsWith("+")) {
-    return { error: `Al teléfono le falta el código de país. Agregá +${COUNTRY_CODE} adelante.` };
+    return { digits: COUNTRY_CODE + digits };
   }
   if (digits.length <= LOCAL_DIGITS || digits.length > MAX_INTERNATIONAL_DIGITS) {
     return { error: "El formato del teléfono no es válido." };
