@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { digitsOnly } from "@/modules/shared/lib/date-utils";
 import { translateApiError } from "@/modules/shared/lib/api-errors";
+import { pointChange, toMapPoint, type MapPoint } from "@/modules/shared/lib/map-point";
 import { ownerFormSchema, type OwnerFormValues } from "@/modules/shared/lib/owner-schema";
 import { ownersApi, type OwnerInput } from "@/modules/shared/lib/owners-api";
 import type { Owner, Weekday } from "@/modules/shared/types";
@@ -38,12 +39,14 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
   // apertura, no por cada intento de submit) — así un reintento manual
   // después de un timeout/confirmación perdida no crea un dueño duplicado.
   const idempotencyKey = useRef(crypto.randomUUID()).current;
+  const initialPoint = owner ? toMapPoint(owner) : null;
 
   const {
     register,
     handleSubmit,
     getValues,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerFormSchema),
@@ -51,6 +54,7 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
       name: owner?.name ?? "",
       phone: owner?.phone ?? "",
       address: owner?.address ?? "",
+      point: initialPoint,
       fixedVisitDay: owner?.fixedVisitDay ?? "",
     },
   });
@@ -74,6 +78,7 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
       name: values.name.trim(),
       phone: values.phone.trim(),
       address: values.address.trim() || null,
+      addressPoint: pointChange(initialPoint, values.point),
       fixedVisitDay: (values.fixedVisitDay || null) as Weekday | null,
     };
   }
@@ -118,11 +123,22 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
     router.push(`/owners/${id}`);
   }
 
+  // El mapa arranca abierto si el dueño ya tiene coordenadas.
+  const [showMap, setShowMap] = useState(initialPoint != null);
+
+  function setPoint(point: MapPoint | null) {
+    setValue("point", point);
+  }
+
   return {
     editing,
     register,
     errors,
     setValue,
+    point: watch("point"),
+    setPoint,
+    showMap,
+    openMap: () => setShowMap(true),
     submitting: mutation.isPending,
     error,
     clearError: () => setError(null),

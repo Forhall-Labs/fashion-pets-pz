@@ -99,7 +99,10 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
             </button>
           </div>
           <p className="text-small">{owner.phone}</p>
-          <p className="text-small">{owner.address || "Sin dirección registrada"}</p>
+          <p className="text-small">
+            {owner.address ||
+              (owner.lat != null ? "Punto marcado en el mapa" : "Sin dirección registrada")}
+          </p>
           {owner.address && !isInServiceArea(owner) ? (
             <p className="text-small" style={{ color: "var(--color-accent-text)" }}>
               No se pudo ubicar esta dirección en Costa Rica: agregale el distrito o una referencia
@@ -170,14 +173,16 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
               <div className="empty-state">Sin mascotas todavía.</div>
             ) : (
               pets.map((p) => {
-                const resolvedLocation = p.locationAddress || owner.address;
+                // Ubicación propia (texto o punto) o, si no tiene, la del dueño.
+                const place = p.locationAddress || p.lat != null ? p : owner;
+                const placeText = place === p ? p.locationAddress : owner.address;
+                const resolvedLocation =
+                  placeText || (place.lat != null ? "punto marcado en el mapa" : null);
                 const locationMissing = p.needsPickup && !resolvedLocation;
                 // La ubicación que se usa no quedó en Costa Rica: el geocoding
                 // al guardar no la encontró, o solo la encontró afuera (Épica 6).
                 const notOnMap =
-                  p.needsPickup &&
-                  Boolean(resolvedLocation) &&
-                  (p.locationAddress ? !isInServiceArea(p) : !isInServiceArea(owner));
+                  p.needsPickup && Boolean(resolvedLocation) && !isInServiceArea(place);
                 return (
                   <div className="card pet-card" key={p.id}>
                     <div className="pet-card-main">

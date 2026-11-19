@@ -22,7 +22,7 @@ function PickupStatus({ pickup }: { pickup: PickupItem }) {
   if (pickup.flags.includes("location_missing")) {
     return <span className="badge badge-incomplete">Ubicación faltante</span>;
   }
-  return <span className="pickup-row-status">{pickup.address}</span>;
+  return <span className="pickup-row-status">{pickup.address ?? "Punto marcado en el mapa"}</span>;
 }
 
 // Pantalla "Pickups del día" (Épica 6).

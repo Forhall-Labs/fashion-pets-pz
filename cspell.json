@@ -127,7 +127,11 @@
     "waze",
     "probá",
     "travelmode",
-    "agregale"
+    "agregale",
+    "zeledón",
+    "latlng",
+    "tocá",
+    "marcá"
   ],
   "ignorePaths": [
     "node_modules",

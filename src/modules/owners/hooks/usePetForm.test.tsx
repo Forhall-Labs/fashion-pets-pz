@@ -291,4 +291,84 @@ describe("usePetForm", () => {
     expect(result.current.error).toContain("1 de 1");
     expect(update).not.toHaveBeenCalled();
   });
+
+  describe("ubicación propia", () => {
+    const PINNED: Pet = { ...REX, locationAddress: "Casa verde", lat: 9.37, lng: -83.7 };
+
+    it("requires a map point or a reference when the pet has its own location", async () => {
+      const { result } = renderHook(
+        () => usePetForm({ ownerId: "o1", existingPets: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      act(() => {
+        fillRequiredFields(result.current.setValue);
+        result.current.setValue("hasOwnLocation", true);
+      });
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+
+      expect(result.current.errors.point?.message).toBe(
+        "Marcá el punto en el mapa o escribí una dirección.",
+      );
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("sends the marked point as coordinates", async () => {
+      create.mockResolvedValue({ ...REX, id: "new" });
+      const { result } = renderHook(
+        () => usePetForm({ ownerId: "o1", existingPets: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      act(() => {
+        fillRequiredFields(result.current.setValue);
+        result.current.setValue("hasOwnLocation", true);
+        result.current.setPoint({ lat: 9.37, lng: -83.7 });
+      });
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+
+      await waitFor(() => expect(create).toHaveBeenCalled());
+      expect(create.mock.calls[0][0]).toMatchObject({
+        locationAddress: null,
+        locationPoint: { lat: 9.37, lng: -83.7 },
+      });
+    });
+
+    it("starts checked with the saved point and doesn't resend it when untouched", async () => {
+      update.mockResolvedValue(PINNED);
+      const { result } = renderHook(
+        () => usePetForm({ pet: PINNED, ownerId: "o1", existingPets: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(result.current.hasOwnLocation).toBe(true);
+      expect(result.current.point).toEqual({ lat: 9.37, lng: -83.7 });
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(update.mock.calls[0][1].locationPoint).toBeUndefined();
+    });
+
+    it("clears address and point when unchecked, so the owner's location is used", async () => {
+      update.mockResolvedValue(REX);
+      const { result } = renderHook(
+        () => usePetForm({ pet: PINNED, ownerId: "o1", existingPets: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      act(() => result.current.setValue("hasOwnLocation", false));
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(update.mock.calls[0][1]).toMatchObject({ locationAddress: null, locationPoint: null });
+    });
+  });
 });
