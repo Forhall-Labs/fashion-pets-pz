@@ -38,6 +38,7 @@
     "deploya",
     "deployan",
     "desaturado",
+    "deslanado",
     "destilda",
     "dndkit",
     "elif",
@@ -137,8 +138,7 @@
     "whatsapp",
     "wireada",
     "wireado",
-    "zeledón",
-    "deslanado"
+    "zeledón"
   ],
   "ignorePaths": [
     "node_modules",
