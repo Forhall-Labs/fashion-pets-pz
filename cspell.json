@@ -38,6 +38,7 @@
     "deploya",
     "deployan",
     "desaturado",
+    "deslanado",
     "destilda",
     "dndkit",
     "elif",
@@ -91,9 +92,12 @@
     "redibuja",
     "regenerá",
     "reintentan",
+    "reprogramá",
     "reprogramación",
     "reprogramado",
     "reprogramar",
+    "reprogramarla",
+    "reprograme",
     "requeriments",
     "resetea",
     "reusa",
@@ -137,11 +141,7 @@
     "whatsapp",
     "wireada",
     "wireado",
-    "zeledón",
-    "deslanado",
-    "reprograme",
-    "reprogramarla",
-    "reprogramá"
+    "zeledón"
   ],
   "ignorePaths": [
     "node_modules",
