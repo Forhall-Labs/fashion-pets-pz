@@ -16,6 +16,7 @@ import { MapPinIcon } from "./MapPinIcon";
 import { PawPrintsSpinner } from "./PawPrintsSpinner";
 import { WalkingDogLoader } from "./WalkingDogLoader";
 import { WarningIcon } from "./WarningIcon";
+import { WhatsAppButton } from "./WhatsAppButton";
 import { appointmentsApi } from "../lib/appointments-api";
 import { useAppointmentDetailModal } from "../hooks/useAppointmentDetailModal";
 import type { Appointment } from "../types";
@@ -44,7 +45,7 @@ export function AppointmentDetailModal({
     owner,
     ownerSectionError,
     loc,
-    waLink,
+    whatsApp,
     goToOwner,
   } = useAppointmentDetailModal(appointmentId, onClose);
 
@@ -125,23 +126,7 @@ export function AppointmentDetailModal({
           <MapPinIcon size={14} /> {loc?.address || "Ubicación faltante"}
         </p>
       ) : null}
-      <div className="modal-actions" style={{ justifyContent: "flex-start" }}>
-        <a
-          className={`btn btn-secondary btn-sm ${waLink ? "" : "btn-disabled"}`}
-          href={waLink ?? undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-disabled={!waLink}
-          onClick={(e) => {
-            if (!waLink) e.preventDefault();
-          }}
-        >
-          Enviar por WhatsApp
-        </a>
-      </div>
-      <p className="text-small" style={{ marginTop: 4 }}>
-        Se abrirá WhatsApp con el mensaje listo — vos lo enviás.
-      </p>
+      <WhatsAppButton result={whatsApp} label="Enviar por WhatsApp" />
       {cancelMutation.isError ? (
         <p className="text-small" style={{ color: "var(--color-danger)" }}>
           No se pudo cancelar la cita. Probá de nuevo.
