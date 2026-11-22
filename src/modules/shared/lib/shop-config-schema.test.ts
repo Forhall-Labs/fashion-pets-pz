@@ -2,11 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { blackoutFormSchema, capacityFormSchema, hoursFormSchema } from "./shop-config-schema";
 
-function capacityError(maxPetsPerDay: string, quick = "") {
-  const result = capacityFormSchema.safeParse({
-    maxPetsPerDay,
-    quickServiceDurationMinutes: quick,
-  });
+function capacityError(maxPetsPerDay: string) {
+  const result = capacityFormSchema.safeParse({ maxPetsPerDay });
   return result.success ? null : result.error.issues[0].message;
 }
 
@@ -23,11 +20,6 @@ describe("capacityFormSchema (HU-4.2 @validation)", () => {
     ["", "Ingresá"],
   ])("rejects %j with a specific message", (value, fragment) => {
     expect(capacityError(value)).toContain(fragment);
-  });
-
-  it("allows the quick-service duration to be empty, but not invalid", () => {
-    expect(capacityError("8", "")).toBeNull();
-    expect(capacityError("8", "0")).toContain("entero positivo");
   });
 });
 

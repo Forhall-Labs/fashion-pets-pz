@@ -1,19 +1,8 @@
 {
   "version": "0.2",
   "language": "en,es",
-  "import": [
-    "@cspell/dict-es-es/cspell-ext.json"
-  ],
-  "dictionaries": [
-    "typescript",
-    "node",
-    "npm",
-    "css",
-    "html",
-    "softwareTerms",
-    "fonts",
-    "es-es"
-  ],
+  "import": ["@cspell/dict-es-es/cspell-ext.json"],
+  "dictionaries": ["typescript", "node", "npm", "css", "html", "softwareTerms", "fonts", "es-es"],
   "words": [
     "accionable",
     "agendamiento",
@@ -148,7 +137,8 @@
     "whatsapp",
     "wireada",
     "wireado",
-    "zeledón"
+    "zeledón",
+    "deslanado"
   ],
   "ignorePaths": [
     "node_modules",

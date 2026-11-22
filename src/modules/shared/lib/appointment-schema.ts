@@ -12,7 +12,8 @@ export const appointmentFormSchema = z.object({
     .string()
     .min(1, "Ingresá la duración.")
     .refine((v) => Number(v) > 0, "La duración tiene que ser mayor a 0."),
-  serviceType: z.string().min(1, "Elegí el tipo de servicio."),
+  // "full_groom" o el id de un servicio del catálogo (Épica 8).
+  service: z.string().min(1, "Elegí el servicio."),
 });
 
 export type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;

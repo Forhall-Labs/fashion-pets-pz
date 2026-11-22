@@ -12,12 +12,12 @@ const OWNER = { name: "María", phone: "+506 8888-0101" };
 const REX: UpcomingForWhatsApp = {
   pet: { name: "Rex" },
   date: "2026-09-10",
-  serviceType: "full_groom",
+  serviceName: "Grooming completo",
 };
 const MILO: UpcomingForWhatsApp = {
   pet: { name: "Milo" },
   date: "2026-09-11",
-  serviceType: "quick_service",
+  serviceName: "Baño",
 };
 
 function texts(result: WhatsAppResult): string[] {
@@ -31,7 +31,7 @@ describe("whatsAppForAppointment (HU-7.1)", () => {
 
     expect(result.ok && result.messages).toHaveLength(1);
     expect(result.ok && result.messages[0].url).toMatch(/^https:\/\/wa\.me\/50688880101\?text=/);
-    expect(texts(result)[0]).toContain("un grooming completo");
+    expect(texts(result)[0]).toContain("Rex (Grooming completo)");
   });
 
   it("includes the pet name and the date, but never the appointment time", () => {
@@ -44,8 +44,8 @@ describe("whatsAppForAppointment (HU-7.1)", () => {
     expect(text).not.toContain("10:00");
   });
 
-  it("reflects the quick-service nature of the visit", () => {
-    expect(texts(whatsAppForAppointment(MILO, OWNER))[0]).toContain("un servicio rápido");
+  it("names the catalog service of the visit", () => {
+    expect(texts(whatsAppForAppointment(MILO, OWNER))[0]).toContain("Milo (Baño)");
   });
 
   it("names the missing detail instead of composing an incomplete message", () => {
@@ -92,8 +92,8 @@ describe("whatsAppForAllUpcoming (HU-7.1)", () => {
   it("notes each appointment's type when the owner's pets have mixed services", () => {
     const [text] = texts(whatsAppForAllUpcoming(OWNER, [REX, MILO]));
 
-    expect(text).toContain("Rex (grooming completo)");
-    expect(text).toContain("Milo (servicio rápido)");
+    expect(text).toContain("Rex (Grooming completo)");
+    expect(text).toContain("Milo (Baño)");
   });
 
   it("explains there is nothing to send when there are no upcoming appointments", () => {
@@ -111,7 +111,7 @@ describe("whatsAppForAllUpcoming (HU-7.1)", () => {
     const many = Array.from({ length: 40 }, (_, i) => ({
       pet: { name: `Mascota con nombre largo ${i + 1}` },
       date: `2027-${String((i % 12) + 1).padStart(2, "0")}-15`,
-      serviceType: "full_groom" as const,
+      serviceName: "Grooming completo",
     }));
     const result = whatsAppForAllUpcoming(OWNER, many);
     if (!result.ok) throw new Error(result.error);

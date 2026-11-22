@@ -3,8 +3,7 @@
 import { ErrorModal } from "./ErrorModal";
 import { Modal, ModalHeader } from "./Modal";
 import { PawPrintsSpinner } from "./PawPrintsSpinner";
-import { SERVICE_LABEL } from "../lib/labels";
-import type { Appointment, ServiceType } from "../types";
+import type { Appointment } from "../types";
 import { useAppointmentForm } from "../hooks/useAppointmentForm";
 
 interface AppointmentFormProps {
@@ -14,8 +13,6 @@ interface AppointmentFormProps {
   onSaved?: (appt: Appointment) => void;
   onClose: () => void;
 }
-
-const SERVICE_OPTIONS: ServiceType[] = ["full_groom", "quick_service"];
 
 // Puerto de openAppointmentForm() (docs/prototype/app.js:517-599) contra la
 // API real — crea o edita una cita, con autocompletado de duración según la
@@ -35,10 +32,11 @@ export function AppointmentForm({
     petOptions,
     petsLoading,
     petId,
-    serviceType,
-    quickServiceDisabled,
+    service,
+    serviceOptions,
+    noCatalogServices,
     handlePetChange,
-    handleServiceTypeChange,
+    handleServiceChange,
     hoursError,
     dayDeviationWarning,
     submitting,
@@ -73,25 +71,24 @@ export function AppointmentForm({
             <span className="error-msg">{errors.petId?.message}</span>
           </div>
 
-          <div className={`field ${errors.serviceType ? "has-error" : ""}`}>
-            <label htmlFor="af-service-type">Tipo de servicio</label>
+          <div className={`field ${errors.service ? "has-error" : ""}`}>
+            <label htmlFor="af-service">Servicio</label>
             <select
-              id="af-service-type"
-              value={serviceType}
-              onChange={(e) => handleServiceTypeChange(e.target.value as ServiceType)}
+              id="af-service"
+              value={service}
+              onChange={(e) => handleServiceChange(e.target.value)}
             >
-              {SERVICE_OPTIONS.map((s) => (
-                <option key={s} value={s} disabled={s === "quick_service" && quickServiceDisabled}>
-                  {SERVICE_LABEL[s]}
+              {service === "" ? <option value="">Elegí un servicio…</option> : null}
+              {serviceOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
-            {quickServiceDisabled ? (
-              <span className="hint">
-                Configurá primero la duración del servicio rápido en Configuración.
-              </span>
+            {noCatalogServices ? (
+              <span className="hint">Agregá más servicios en Configuración → Servicios.</span>
             ) : null}
-            <span className="error-msg">{errors.serviceType?.message}</span>
+            <span className="error-msg">{errors.service?.message}</span>
           </div>
 
           <div className="field-row">

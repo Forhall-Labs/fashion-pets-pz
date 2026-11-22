@@ -27,6 +27,7 @@ const baseAppt: Appointment = {
   startTime: "09:00",
   durationMinutes: 60,
   serviceType: "full_groom",
+  serviceId: null,
   status: "scheduled",
   source: "manual",
   flaggedReason: null,

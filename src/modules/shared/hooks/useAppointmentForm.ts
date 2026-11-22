@@ -9,10 +9,21 @@ import { translateAppointmentError } from "../lib/api-errors";
 import { appointmentFormSchema, type AppointmentFormValues } from "../lib/appointment-schema";
 import { appointmentsApi, type AppointmentInput } from "../lib/appointments-api";
 import { fromISODate, minutesToTime, timeToMinutes } from "../lib/date-utils";
-import { DAY_LABEL, DAY_OPTIONS } from "../lib/labels";
+import { DAY_LABEL, DAY_OPTIONS, FULL_GROOM_LABEL } from "../lib/labels";
+import { durationFor } from "../lib/service-catalog";
 import { shopConfigApi } from "../lib/shop-config-api";
-import type { Appointment, ServiceType, Weekday } from "../types";
+import type { Appointment, Weekday } from "../types";
 import { usePetOptions } from "./usePetOptions";
+import { useServices } from "./useServices";
+
+// Valor del selector "Servicio" para el grooming completo; el resto de las
+// opciones son ids de servicios del catálogo.
+export const FULL_GROOM = "full_groom";
+
+function initialService(appointment: Appointment | null): string {
+  if (!appointment || appointment.serviceType === "full_groom") return FULL_GROOM;
+  return appointment.serviceId ?? "";
+}
 
 function weekdayOf(iso: string): Weekday {
   const jsDay = fromISODate(iso).getDay(); // 0=domingo..6=sábado
@@ -44,6 +55,7 @@ export function useAppointmentForm({
 
   const { pets, ownersById, petOptions, loading: petsLoading } = usePetOptions();
   const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
+  const { activeServices, servicesById } = useServices();
 
   const {
     register,
@@ -59,7 +71,7 @@ export function useAppointmentForm({
       startTime: appointment?.startTime ?? "",
       durationMinutes:
         appointment?.durationMinutes != null ? String(appointment.durationMinutes) : "",
-      serviceType: appointment?.serviceType ?? "full_groom",
+      service: initialService(appointment),
     },
   });
 
@@ -72,7 +84,7 @@ export function useAppointmentForm({
   const [durationTouched, setDurationTouched] = useState(false);
 
   const petId = watch("petId");
-  const serviceType = watch("serviceType") as ServiceType;
+  const service = watch("service");
   const startTime = watch("startTime");
   const durationMinutesInput = watch("durationMinutes");
   const date = watch("date");
@@ -122,26 +134,44 @@ export function useAppointmentForm({
     return `Se desvía del día fijo de ${owner.name} (${DAY_LABEL[owner.fixedVisitDay]}).`;
   })();
 
-  function autofillDuration(nextPetId: string, nextServiceType: ServiceType) {
+  // Grooming completo: la duración promedio de la mascota. Servicio del
+  // catálogo: la sugerida para su tamaño. Siempre editable a mano.
+  function autofillDuration(nextPetId: string, nextService: string) {
     if (durationTouched) return;
-    if (nextServiceType === "quick_service") {
-      const quick = shopConfigQuery.data?.quickServiceDurationMinutes;
-      if (quick) setValue("durationMinutes", String(quick));
+    const pet = pets.find((p) => p.id === nextPetId);
+    if (nextService === FULL_GROOM) {
+      if (pet?.avgServiceDuration) setValue("durationMinutes", String(pet.avgServiceDuration));
       return;
     }
-    const pet = pets.find((p) => p.id === nextPetId);
-    if (pet?.avgServiceDuration) setValue("durationMinutes", String(pet.avgServiceDuration));
+    const catalogService = servicesById.get(nextService);
+    if (pet && catalogService) {
+      setValue("durationMinutes", String(durationFor(catalogService, pet.size)));
+    }
   }
 
   function handlePetChange(nextPetId: string) {
     setValue("petId", nextPetId, { shouldValidate: true });
-    autofillDuration(nextPetId, serviceType);
+    autofillDuration(nextPetId, service);
   }
 
-  function handleServiceTypeChange(nextServiceType: ServiceType) {
-    setValue("serviceType", nextServiceType, { shouldValidate: true });
-    autofillDuration(petId, nextServiceType);
+  function handleServiceChange(nextService: string) {
+    setValue("service", nextService, { shouldValidate: true });
+    autofillDuration(petId, nextService);
   }
+
+  // Grooming + los servicios activos. Si la cita ya tenía un servicio que
+  // después se desactivó, se sigue mostrando para no perderlo al editar.
+  const serviceOptions = useMemo(() => {
+    const current = appointment?.serviceId ? servicesById.get(appointment.serviceId) : undefined;
+    const catalog = current && !current.active ? [...activeServices, current] : activeServices;
+    return [
+      { value: FULL_GROOM, label: FULL_GROOM_LABEL },
+      ...catalog.map((s) => ({
+        value: s.id,
+        label: s.active ? s.name : `${s.name} (desactivado)`,
+      })),
+    ];
+  }, [activeServices, servicesById, appointment?.serviceId]);
 
   const mutation = useMutation({
     mutationFn: (input: AppointmentInput) =>
@@ -163,7 +193,8 @@ export function useAppointmentForm({
       date: values.date,
       startTime: values.startTime,
       durationMinutes: Number(values.durationMinutes),
-      serviceType: values.serviceType as ServiceType,
+      serviceType: values.service === FULL_GROOM ? "full_groom" : "quick_service",
+      serviceId: values.service === FULL_GROOM ? null : values.service,
     });
   }
 
@@ -175,12 +206,11 @@ export function useAppointmentForm({
     petOptions,
     petsLoading,
     petId,
-    serviceType,
-    quickServiceDisabled: shopConfigQuery.data
-      ? shopConfigQuery.data.quickServiceDurationMinutes == null
-      : false,
+    service,
+    serviceOptions,
+    noCatalogServices: activeServices.length === 0,
     handlePetChange,
-    handleServiceTypeChange,
+    handleServiceChange,
     hoursError,
     dayDeviationWarning,
     submitting: mutation.isPending,

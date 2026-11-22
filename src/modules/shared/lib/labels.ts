@@ -1,4 +1,4 @@
-import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType, Weekday } from "../types";
+import type { AppointmentStatus, GroomingFrequency, PetSize, Weekday } from "../types";
 
 export const SIZE_LABEL: Record<PetSize, string> = {
   small: "Pequeño",
@@ -12,10 +12,8 @@ export const FREQ_LABEL: Record<GroomingFrequency, string> = {
   once_every_two_months: "Cada dos meses",
 };
 
-export const SERVICE_LABEL: Record<ServiceType, string> = {
-  full_groom: "Grooming completo",
-  quick_service: "Servicio rápido",
-};
+// Los servicios del catálogo usan su propio nombre (ver service-catalog.ts).
+export const FULL_GROOM_LABEL = "Grooming completo";
 
 export const STATUS_LABEL: Record<AppointmentStatus, string> = {
   scheduled: "Agendada",

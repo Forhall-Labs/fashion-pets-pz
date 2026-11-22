@@ -7,7 +7,7 @@
 // en pantalla. La hora de la cita no va en el mensaje, a pedido del cliente.
 
 import { formatDateLong } from "./date-utils";
-import type { Owner, Pet, ServiceType } from "../types";
+import type { Owner, Pet } from "../types";
 
 // Los clientes son de Costa Rica: un número local tiene 8 dígitos y el código
 // de país es 506. Un número con más dígitos se toma como que ya trae código;
@@ -31,7 +31,8 @@ export type WhatsAppResult =
 export interface UpcomingForWhatsApp {
   pet: Pick<Pet, "name">;
   date: string;
-  serviceType: ServiceType;
+  /** "Grooming completo" o el nombre del servicio del catálogo. */
+  serviceName: string;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -69,10 +70,6 @@ function missingDetail(item: UpcomingForWhatsApp): string | null {
   return null;
 }
 
-function serviceLabel(serviceType: ServiceType): string {
-  return serviceType === "quick_service" ? "servicio rápido" : "grooming completo";
-}
-
 function dateLabel(iso: string): string {
   return `${formatDateLong(iso)} (${iso})`;
 }
@@ -90,8 +87,7 @@ export function whatsAppForAppointment(
   const missing = missingDetail(appt);
   if (missing) return fail(missing);
 
-  const kind = appt.serviceType === "quick_service" ? "un servicio rápido" : "un grooming completo";
-  const text = `Hola ${owner.name}! Te recordamos ${kind} para ${appt.pet.name} el ${dateLabel(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
+  const text = `Hola ${owner.name}! Te recordamos la cita de ${appt.pet.name} (${appt.serviceName}) el ${dateLabel(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
   return { ok: true, messages: [toMessage(phone.digits, text)] };
 }
 
@@ -108,9 +104,7 @@ export function whatsAppForAllUpcoming(
   }
   if (upcoming.length === 1) return whatsAppForAppointment(upcoming[0], owner);
 
-  const lines = upcoming.map(
-    (a) => `• ${a.pet.name} (${serviceLabel(a.serviceType)}): ${dateLabel(a.date)}`,
-  );
+  const lines = upcoming.map((a) => `• ${a.pet.name} (${a.serviceName}): ${dateLabel(a.date)}`);
   const footer = "¡Te esperamos! 🐾";
   const header = (part: string) => `Hola ${owner.name}! Te recordamos las próximas citas${part}:`;
   const compose = (part: string, chunk: string[]) => [header(part), ...chunk, footer].join("\n");
