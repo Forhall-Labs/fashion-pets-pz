@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
+import { LocationPicker } from "@/modules/shared/components/LocationPicker";
 import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { DAY_LABEL, DAY_OPTIONS } from "@/modules/shared/lib/labels";
@@ -23,6 +24,10 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
     editing,
     register,
     errors,
+    point,
+    setPoint,
+    showMap,
+    openMap,
     submitting,
     error,
     clearError,
@@ -118,6 +123,13 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
             <label htmlFor="of-address">Dirección</label>
             <input id="of-address" {...register("address")} />
             <span className="hint">Se usa como ubicación por defecto de sus mascotas.</span>
+            {showMap ? (
+              <LocationPicker value={point} onChange={setPoint} />
+            ) : (
+              <button type="button" className="btn btn-text btn-sm" onClick={openMap}>
+                Marcar en el mapa (opcional)
+              </button>
+            )}
           </div>
           <div className="field">
             <label htmlFor="of-day">Día fijo de visita</label>

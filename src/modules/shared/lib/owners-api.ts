@@ -4,6 +4,7 @@
 
 import type { Owner, Weekday } from "../types";
 import { apiClient, toQueryString, type Page } from "./api-client";
+import type { MapPoint } from "./map-point";
 
 interface OwnerRecord {
   id: string;
@@ -42,6 +43,8 @@ export interface OwnerInput {
   name: string;
   phone: string;
   address: string | null;
+  /** Ver pointChange(): undefined = no cambió, null = se quitó el punto. */
+  addressPoint?: MapPoint | null;
   fixedVisitDay: Weekday | null;
 }
 
@@ -50,6 +53,10 @@ function toBody(input: OwnerInput) {
     name: input.name,
     phone: input.phone,
     address: input.address || null,
+    ...(input.addressPoint !== undefined && {
+      addressLat: input.addressPoint?.lat ?? null,
+      addressLng: input.addressPoint?.lng ?? null,
+    }),
     fixedVisitDay: input.fixedVisitDay || null,
   };
 }

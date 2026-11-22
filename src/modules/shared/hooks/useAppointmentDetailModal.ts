@@ -7,7 +7,7 @@ import { appointmentsApi } from "../lib/appointments-api";
 import { petsApi } from "../lib/pets-api";
 import { ownersApi } from "../lib/owners-api";
 import { ApiError } from "../lib/api-client";
-import { whatsAppLinkForAppointment } from "../lib/whatsapp";
+import { whatsAppForAppointment } from "../lib/whatsapp";
 
 function isNotFound(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
@@ -49,13 +49,13 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
 
   const loc = pet
     ? pet.lat != null && pet.lng != null
-      ? { address: pet.locationAddress, has: true }
+      ? { address: pet.locationAddress || "Punto marcado en el mapa", has: true }
       : owner && owner.lat != null && owner.lng != null
-        ? { address: owner.address, has: true }
+        ? { address: owner.address || "Punto marcado en el mapa", has: true }
         : { address: null, has: false }
     : null;
 
-  const waLink = appt && pet && owner ? whatsAppLinkForAppointment(appt, pet, owner) : null;
+  const whatsApp = appt && pet && owner ? whatsAppForAppointment({ ...appt, pet }, owner) : null;
 
   function goToOwner() {
     if (!owner) return;
@@ -84,7 +84,7 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
     owner,
     ownerSectionError: !!ownerId && (!!ownerQuery.error || isNotFound(ownerQuery.error)),
     loc,
-    waLink,
+    whatsApp,
     goToOwner,
   };
 }

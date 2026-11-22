@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TODAY_ISO } from "@/modules/shared/lib/mock-data";
 import { translateApiError } from "@/modules/shared/lib/api-errors";
 import { appointmentsApi } from "@/modules/shared/lib/appointments-api";
+import { pointChange, toMapPoint, type MapPoint } from "@/modules/shared/lib/map-point";
 import { petFormSchema, type PetFormValues } from "@/modules/shared/lib/pet-schema";
 import { petsApi, type PetInput } from "@/modules/shared/lib/pets-api";
 import type { GroomingFrequency, Pet, PetSize } from "@/modules/shared/types";
@@ -47,6 +48,7 @@ export function usePetForm({
   const editing = pet != null;
   const queryClient = useQueryClient();
   const idempotencyKey = useRef(crypto.randomUUID()).current;
+  const initialPoint = pet ? toMapPoint(pet) : null;
 
   const {
     register,
@@ -63,7 +65,9 @@ export function usePetForm({
       size: pet?.size ?? "",
       isAggressive: pet?.isAggressive ?? false,
       needsPickup: pet?.needsPickup ?? false,
+      hasOwnLocation: pet != null && (!!pet.locationAddress || pet.lat != null),
       locationAddress: pet?.locationAddress ?? "",
+      point: initialPoint,
       groomingFrequency: pet?.groomingFrequency ?? "",
       avgServiceDuration: pet?.avgServiceDuration != null ? String(pet.avgServiceDuration) : "",
     },
@@ -84,7 +88,10 @@ export function usePetForm({
       size: values.size as PetSize,
       isAggressive: values.isAggressive,
       needsPickup: values.needsPickup,
-      locationAddress: values.locationAddress.trim() || null,
+      // Sin ubicación propia: se borran dirección y punto, y la mascota pasa
+      // a usar la del dueño.
+      locationAddress: values.hasOwnLocation ? values.locationAddress.trim() || null : null,
+      locationPoint: pointChange(initialPoint, values.hasOwnLocation ? values.point : null),
       groomingFrequency: (values.groomingFrequency || null) as GroomingFrequency | null,
       avgServiceDuration: values.avgServiceDuration ? Number(values.avgServiceDuration) : null,
     };
@@ -224,11 +231,18 @@ export function usePetForm({
     mutation.mutate({ input: buildInput(getValues()), cancelFutureAppointments: true });
   }
 
+  function setPoint(point: MapPoint | null) {
+    setValue("point", point, { shouldValidate: true });
+  }
+
   return {
     editing,
     register,
     errors,
     setValue,
+    hasOwnLocation: watch("hasOwnLocation"),
+    point: watch("point"),
+    setPoint,
     name: watch("name"),
     isAggressive: watch("isAggressive"),
     toggleAggressive,
