@@ -197,4 +197,49 @@ describe("useOwnerForm", () => {
     await waitFor(() => expect(update).toHaveBeenCalled());
     expect(result.current.conflict).toBeNull();
   });
+
+  describe("punto en el mapa", () => {
+    it("sends a newly marked point", async () => {
+      update.mockResolvedValue(EXISTING);
+      const { result } = renderHook(
+        () => useOwnerForm({ owner: EXISTING, existingOwners: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(result.current.showMap).toBe(false);
+      act(() => {
+        result.current.openMap();
+        result.current.setPoint({ lat: 9.37, lng: -83.7 });
+      });
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+
+      await waitFor(() => expect(update).toHaveBeenCalled());
+      expect(update.mock.calls[0][1].addressPoint).toEqual({ lat: 9.37, lng: -83.7 });
+    });
+
+    it("omits an untouched point and sends null when it's removed", async () => {
+      const pinned: Owner = { ...EXISTING, address: "San Isidro", lat: 9.37, lng: -83.7 };
+      update.mockResolvedValue(pinned);
+      const { result } = renderHook(
+        () => useOwnerForm({ owner: pinned, existingOwners: [], onClose: vi.fn() }),
+        { wrapper: createWrapper() },
+      );
+
+      expect(result.current.showMap).toBe(true);
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+      expect(update.mock.calls[0][1].addressPoint).toBeUndefined();
+
+      act(() => result.current.setPoint(null));
+      await act(async () => {
+        await result.current.handleSubmit(fakeSubmitEvent());
+      });
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(2));
+      expect(update.mock.calls[1][1].addressPoint).toBeNull();
+    });
+  });
 });

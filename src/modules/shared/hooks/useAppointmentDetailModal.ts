@@ -49,9 +49,9 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
 
   const loc = pet
     ? pet.lat != null && pet.lng != null
-      ? { address: pet.locationAddress, has: true }
+      ? { address: pet.locationAddress || "Punto marcado en el mapa", has: true }
       : owner && owner.lat != null && owner.lng != null
-        ? { address: owner.address, has: true }
+        ? { address: owner.address || "Punto marcado en el mapa", has: true }
         : { address: null, has: false }
     : null;
 

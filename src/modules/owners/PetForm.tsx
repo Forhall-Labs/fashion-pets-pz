@@ -3,6 +3,7 @@
 import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
 import { IncompleteBadge } from "@/modules/shared/components/Badge";
+import { LocationPicker } from "@/modules/shared/components/LocationPicker";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { FREQ_LABEL, SIZE_LABEL } from "@/modules/shared/lib/labels";
 import type { GroomingFrequency, Owner, Pet, PetSize } from "@/modules/shared/types";
@@ -33,6 +34,9 @@ export function PetForm({ pet = null, owner, existingPets, onSaved, onClose }: P
     editing,
     register,
     errors,
+    hasOwnLocation,
+    point,
+    setPoint,
     name,
     isAggressive,
     toggleAggressive,
@@ -159,15 +163,28 @@ export function PetForm({ pet = null, owner, existingPets, onSaved, onClose }: P
             <input type="checkbox" id="pf-pickup" {...register("needsPickup")} />
             <label htmlFor="pf-pickup">Necesita pickup</label>
           </div>
-          <div className="field">
-            <label htmlFor="pf-location">Ubicación</label>
-            <input
-              id="pf-location"
-              {...register("locationAddress")}
-              placeholder="Dejar vacío para usar la del dueño"
-            />
-            <span className="hint">Dueño: {owner.address || "sin dirección"}</span>
+          <div className="checkbox-field">
+            <input type="checkbox" id="pf-own-location" {...register("hasOwnLocation")} />
+            <label htmlFor="pf-own-location">Tiene ubicación propia</label>
           </div>
+          {hasOwnLocation ? (
+            <div className={`field ${errors.point ? "has-error" : ""}`}>
+              <label htmlFor="pf-location">Referencia (opcional)</label>
+              <input
+                id="pf-location"
+                {...register("locationAddress")}
+                placeholder="Ej.: casa verde frente a la plaza"
+              />
+              <LocationPicker value={point} onChange={setPoint} error={errors.point?.message} />
+            </div>
+          ) : (
+            <p
+              className="text-small"
+              style={{ color: "var(--color-text-secondary)", marginBottom: "var(--space-4)" }}
+            >
+              Usa la ubicación del dueño: {ownerLocationLabel(owner)}
+            </p>
+          )}
           <div className="field-row">
             <div className="field">
               <label htmlFor="pf-freq">Frecuencia de grooming</label>
@@ -207,4 +224,9 @@ export function PetForm({ pet = null, owner, existingPets, onSaved, onClose }: P
       {error && <ErrorModal title="No se pudo guardar" message={error} onClose={clearError} />}
     </>
   );
+}
+
+function ownerLocationLabel(owner: Owner): string {
+  if (owner.address) return owner.address;
+  return owner.lat != null ? "punto marcado en el mapa" : "sin dirección";
 }

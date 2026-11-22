@@ -13,6 +13,7 @@ import {
 } from "@/modules/shared/components/Badge";
 import { formatDateShort } from "@/modules/shared/lib/date-utils";
 import { DAY_LABEL } from "@/modules/shared/lib/labels";
+import { isInServiceArea } from "@/modules/shared/lib/maps-links";
 import { isIncomplete } from "@/modules/shared/lib/selectors";
 import { AppointmentDetailModal } from "@/modules/shared/components/AppointmentDetailModal";
 import { AppointmentForm } from "@/modules/shared/components/AppointmentForm";
@@ -99,7 +100,16 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
             </button>
           </div>
           <p className="text-small">{owner.phone}</p>
-          <p className="text-small">{owner.address || "Sin dirección registrada"}</p>
+          <p className="text-small">
+            {owner.address ||
+              (owner.lat != null ? "Punto marcado en el mapa" : "Sin dirección registrada")}
+          </p>
+          {owner.address && !isInServiceArea(owner) ? (
+            <p className="text-small" style={{ color: "var(--color-accent-text)" }}>
+              No se pudo ubicar esta dirección en Costa Rica: agregale el distrito o una referencia
+              para que entre en la ruta de pickups.
+            </p>
+          ) : null}
           <p className="text-small">
             Día fijo de visita:{" "}
             {owner.fixedVisitDay ? DAY_LABEL[owner.fixedVisitDay] : "Sin preferencia"}
@@ -149,8 +159,16 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
               <div className="empty-state">Sin mascotas todavía.</div>
             ) : (
               pets.map((p) => {
-                const resolvedLocation = p.locationAddress || owner.address;
+                // Ubicación propia (texto o punto) o, si no tiene, la del dueño.
+                const place = p.locationAddress || p.lat != null ? p : owner;
+                const placeText = place === p ? p.locationAddress : owner.address;
+                const resolvedLocation =
+                  placeText || (place.lat != null ? "punto marcado en el mapa" : null);
                 const locationMissing = p.needsPickup && !resolvedLocation;
+                // La ubicación que se usa no quedó en Costa Rica: el geocoding
+                // al guardar no la encontró, o solo la encontró afuera (Épica 6).
+                const notOnMap =
+                  p.needsPickup && Boolean(resolvedLocation) && !isInServiceArea(place);
                 return (
                   <div className="card pet-card" key={p.id}>
                     <div className="pet-card-main">
@@ -159,6 +177,11 @@ export function OwnerDetail({ ownerId }: { ownerId: string }) {
                       <span className="text-small">
                         Ubicación: {resolvedLocation || "Sin ubicación"}
                       </span>
+                      {notOnMap ? (
+                        <span className="text-small" style={{ color: "var(--color-accent-text)" }}>
+                          No se pudo ubicar en el mapa — revisá la dirección.
+                        </span>
+                      ) : null}
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
                         <SizeBadge size={p.size} />
                         {p.isAggressive ? <AggressiveBadge /> : null}
