@@ -11,6 +11,7 @@ import type { ShopConfig } from "@/modules/shared/types";
 import { BlackoutsSection } from "./BlackoutsSection";
 import { useCapacityForm } from "./hooks/useCapacityForm";
 import { useHoursForm } from "./hooks/useHoursForm";
+import { ServicesSection } from "./ServicesSection";
 import { ShopConfigSaveModals } from "./ShopConfigSaveModals";
 
 // "Configuración de Tienda" (Épica 4) contra la API real — capacidad
@@ -45,6 +46,7 @@ export function ConfigView() {
         </>
       )}
 
+      <ServicesSection />
       <BlackoutsSection />
     </section>
   );
@@ -70,18 +72,13 @@ function CapacitySection({ config }: { config: ShopConfig }) {
 
   return (
     <div className="config-section card">
-      <h2 className="text-h2">Capacidad y servicio rápido</h2>
-      <span className="text-small">Máximo de mascotas por día y duración del servicio rápido.</span>
+      <h2 className="text-h2">Capacidad</h2>
+      <span className="text-small">Máximo de mascotas por día (todas las citas cuentan).</span>
       <form className="field-row" onSubmit={handleSubmit} noValidate>
         <div className={`field ${errors.maxPetsPerDay ? "has-error" : ""}`}>
           <label htmlFor="cf-max">Máximo de mascotas por día</label>
           <input id="cf-max" inputMode="numeric" {...register("maxPetsPerDay")} />
           <span className="error-msg">{errors.maxPetsPerDay?.message}</span>
-        </div>
-        <div className={`field ${errors.quickServiceDurationMinutes ? "has-error" : ""}`}>
-          <label htmlFor="cf-quick">Duración de servicio rápido (min)</label>
-          <input id="cf-quick" inputMode="numeric" {...register("quickServiceDurationMinutes")} />
-          <span className="error-msg">{errors.quickServiceDurationMinutes?.message}</span>
         </div>
         <SaveButton busy={save.busy} saved={save.saved} />
       </form>

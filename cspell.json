@@ -1,19 +1,8 @@
 {
   "version": "0.2",
   "language": "en,es",
-  "import": [
-    "@cspell/dict-es-es/cspell-ext.json"
-  ],
-  "dictionaries": [
-    "typescript",
-    "node",
-    "npm",
-    "css",
-    "html",
-    "softwareTerms",
-    "fonts",
-    "es-es"
-  ],
+  "import": ["@cspell/dict-es-es/cspell-ext.json"],
+  "dictionaries": ["typescript", "node", "npm", "css", "html", "softwareTerms", "fonts", "es-es"],
   "words": [
     "accionable",
     "agendamiento",
@@ -49,6 +38,7 @@
     "deploya",
     "deployan",
     "desaturado",
+    "deslanado",
     "destilda",
     "dndkit",
     "elif",

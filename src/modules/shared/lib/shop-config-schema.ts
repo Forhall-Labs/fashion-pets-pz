@@ -23,14 +23,6 @@ export const capacityFormSchema = z.object({
         value === "" ? "Ingresá el máximo de mascotas por día." : positiveIntegerIssue(value);
       if (issue) ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
     }),
-  // Opcional: vacío = servicio rápido todavía sin configurar (HU-5.4).
-  quickServiceDurationMinutes: z
-    .string()
-    .trim()
-    .superRefine((value, ctx) => {
-      const issue = value === "" ? null : positiveIntegerIssue(value);
-      if (issue) ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
-    }),
 });
 
 export type CapacityFormValues = z.infer<typeof capacityFormSchema>;

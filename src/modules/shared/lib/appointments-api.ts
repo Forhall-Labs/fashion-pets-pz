@@ -13,6 +13,7 @@ export interface AppointmentInput {
   startTime: string;
   durationMinutes: number;
   serviceType: Appointment["serviceType"];
+  serviceId?: string | null;
   flaggedReason?: string | null;
 }
 

@@ -1,5 +1,5 @@
-import { FREQ_LABEL, SERVICE_LABEL, SIZE_LABEL, STATUS_LABEL } from "../lib/labels";
-import type { AppointmentStatus, GroomingFrequency, PetSize, ServiceType } from "../types";
+import { FREQ_LABEL, SIZE_LABEL, STATUS_LABEL } from "../lib/labels";
+import type { AppointmentStatus, GroomingFrequency, PetSize } from "../types";
 
 import { CarIcon } from "./CarIcon";
 import { MapPinIcon } from "./MapPinIcon";
@@ -13,8 +13,8 @@ export function FrequencyBadge({ frequency }: { frequency: GroomingFrequency }) 
   return <span className="badge badge-size">{FREQ_LABEL[frequency]}</span>;
 }
 
-export function ServiceBadge({ type }: { type: ServiceType }) {
-  return <span className="badge badge-service">{SERVICE_LABEL[type]}</span>;
+export function ServiceBadge({ name }: { name: string }) {
+  return <span className="badge badge-service">{name}</span>;
 }
 
 export function StatusBadge({ status }: { status: AppointmentStatus }) {

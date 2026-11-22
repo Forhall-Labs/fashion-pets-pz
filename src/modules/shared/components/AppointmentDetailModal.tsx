@@ -46,6 +46,7 @@ export function AppointmentDetailModal({
     owner,
     ownerSectionError,
     loc,
+    serviceName,
     whatsApp,
     goToOwner,
   } = useAppointmentDetailModal(appointmentId, onClose);
@@ -97,7 +98,7 @@ export function AppointmentDetailModal({
       <ModalHeader title="Detalle de cita" onClose={onClose} />
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
         <StatusBadge status={appt.status} />
-        <ServiceBadge type={appt.serviceType} />
+        <ServiceBadge name={serviceName} />
         <SizeBadge size={pet.size} />
         {pet.isAggressive ? <AggressiveBadge /> : null}
         {pet.needsPickup ? <PickupBadge /> : null}
