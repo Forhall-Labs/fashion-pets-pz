@@ -9,8 +9,6 @@ import { petsApi } from "@/modules/shared/lib/pets-api";
 import { appointmentsApi } from "@/modules/shared/lib/appointments-api";
 import { whatsAppForAllUpcoming } from "@/modules/shared/lib/whatsapp";
 import { toISODate } from "@/modules/shared/lib/date-utils";
-import { useServices } from "@/modules/shared/hooks/useServices";
-import { serviceNameOf } from "@/modules/shared/lib/service-catalog";
 
 // Ventana hacia adelante para "próximas citas" — un año alcanza y sobra
 // para lo que un dueño puede tener agendado a la vez.
@@ -56,7 +54,6 @@ export function useOwnerDetail(ownerId: string) {
     enabled: petsQuery.isSuccess,
   });
 
-  const { servicesById } = useServices();
   const owner = ownerQuery.data ?? null;
   const pets = petsQuery.data?.data ?? [];
   const notFound = ownerQuery.error instanceof ApiError && ownerQuery.error.status === 404;
@@ -71,11 +68,7 @@ export function useOwnerDetail(ownerId: string) {
 
   const upcoming = (appointmentsQuery.data ?? [])
     .filter((a) => a.status === "scheduled" && pets.some((p) => p.id === a.petId))
-    .map((a) => ({
-      ...a,
-      pet: pets.find((p) => p.id === a.petId)!,
-      serviceName: serviceNameOf(a, servicesById),
-    }))
+    .map((a) => ({ ...a, pet: pets.find((p) => p.id === a.petId)! }))
     .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
 
   const whatsApp = owner ? whatsAppForAllUpcoming(owner, upcoming) : null;

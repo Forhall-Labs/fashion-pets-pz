@@ -59,8 +59,7 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
 
   const { servicesById } = useServices();
   const serviceName = appt ? serviceNameOf(appt, servicesById) : "";
-  const whatsApp =
-    appt && pet && owner ? whatsAppForAppointment({ ...appt, pet, serviceName }, owner) : null;
+  const whatsApp = appt && pet && owner ? whatsAppForAppointment({ ...appt, pet }, owner) : null;
 
   function goToOwner() {
     if (!owner) return;

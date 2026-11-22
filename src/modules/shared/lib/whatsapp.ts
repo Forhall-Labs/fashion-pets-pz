@@ -4,7 +4,8 @@
 //
 // HU-7.1: en vez de devolver un link o null, devuelve el motivo exacto por el
 // que no se puede armar (teléfono, dato faltante, sin citas) para mostrarlo
-// en pantalla. La hora de la cita no va en el mensaje, a pedido del cliente.
+// en pantalla. El recordatorio dice solo qué mascota tiene cita y qué día:
+// sin hora ni tipo de servicio, a pedido del cliente (2026-11-21).
 
 import { formatDateLong } from "./date-utils";
 import type { Owner, Pet } from "../types";
@@ -31,8 +32,6 @@ export type WhatsAppResult =
 export interface UpcomingForWhatsApp {
   pet: Pick<Pet, "name">;
   date: string;
-  /** "Grooming completo" o el nombre del servicio del catálogo. */
-  serviceName: string;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -70,10 +69,6 @@ function missingDetail(item: UpcomingForWhatsApp): string | null {
   return null;
 }
 
-function dateLabel(iso: string): string {
-  return `${formatDateLong(iso)} (${iso})`;
-}
-
 function toMessage(digits: string, text: string): WhatsAppMessage {
   return { text, url: `https://wa.me/${digits}?text=${encodeURIComponent(text)}` };
 }
@@ -87,7 +82,7 @@ export function whatsAppForAppointment(
   const missing = missingDetail(appt);
   if (missing) return fail(missing);
 
-  const text = `Hola ${owner.name}! Te recordamos la cita de ${appt.pet.name} (${appt.serviceName}) el ${dateLabel(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
+  const text = `Hola ${owner.name}! Te recordamos que ${appt.pet.name} tiene cita el ${formatDateLong(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
   return { ok: true, messages: [toMessage(phone.digits, text)] };
 }
 
@@ -104,7 +99,7 @@ export function whatsAppForAllUpcoming(
   }
   if (upcoming.length === 1) return whatsAppForAppointment(upcoming[0], owner);
 
-  const lines = upcoming.map((a) => `• ${a.pet.name} (${a.serviceName}): ${dateLabel(a.date)}`);
+  const lines = upcoming.map((a) => `• ${a.pet.name}: ${formatDateLong(a.date)}`);
   const footer = "¡Te esperamos! 🐾";
   const header = (part: string) => `Hola ${owner.name}! Te recordamos las próximas citas${part}:`;
   const compose = (part: string, chunk: string[]) => [header(part), ...chunk, footer].join("\n");

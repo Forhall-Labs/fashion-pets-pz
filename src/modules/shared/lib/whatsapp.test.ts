@@ -12,12 +12,10 @@ const OWNER = { name: "María", phone: "+506 8888-0101" };
 const REX: UpcomingForWhatsApp = {
   pet: { name: "Rex" },
   date: "2026-09-10",
-  serviceName: "Grooming completo",
 };
 const MILO: UpcomingForWhatsApp = {
   pet: { name: "Milo" },
   date: "2026-09-11",
-  serviceName: "Baño",
 };
 
 function texts(result: WhatsAppResult): string[] {
@@ -31,21 +29,23 @@ describe("whatsAppForAppointment (HU-7.1)", () => {
 
     expect(result.ok && result.messages).toHaveLength(1);
     expect(result.ok && result.messages[0].url).toMatch(/^https:\/\/wa\.me\/50688880101\?text=/);
-    expect(texts(result)[0]).toContain("Rex (Grooming completo)");
+    expect(texts(result)[0]).toBe(
+      "Hola María! Te recordamos que Rex tiene cita el Jueves 10 de Septiembre 2026. ¡Te esperamos en la peluquería! 🐾",
+    );
   });
 
-  it("includes the pet name and the date, but never the appointment time", () => {
+  it("says only the pet and the day: never the time nor the service", () => {
     const [text] = texts(
-      whatsAppForAppointment({ ...REX, startTime: "10:00" } as UpcomingForWhatsApp, OWNER),
+      whatsAppForAppointment(
+        { ...REX, startTime: "10:00", serviceType: "quick_service" } as UpcomingForWhatsApp,
+        OWNER,
+      ),
     );
 
-    expect(text).toContain("Rex");
-    expect(text).toContain("2026-09-10");
+    expect(text).toContain("Rex tiene cita el Jueves 10 de Septiembre 2026");
     expect(text).not.toContain("10:00");
-  });
-
-  it("names the catalog service of the visit", () => {
-    expect(texts(whatsAppForAppointment(MILO, OWNER))[0]).toContain("Milo (Baño)");
+    expect(text).not.toMatch(/servicio|grooming/i);
+    expect(text).not.toContain("2026-09-10");
   });
 
   it("names the missing detail instead of composing an incomplete message", () => {
@@ -86,14 +86,14 @@ describe("whatsAppForAllUpcoming (HU-7.1)", () => {
     const result = whatsAppForAllUpcoming(OWNER, five);
 
     expect(result.ok && result.messages).toHaveLength(1);
-    for (const appt of five) expect(texts(result)[0]).toContain(appt.date);
+    for (const d of [1, 2, 3, 4, 5]) expect(texts(result)[0]).toContain(`${d} de Octubre 2026`);
   });
 
-  it("notes each appointment's type when the owner's pets have mixed services", () => {
+  it("lists each pet with its day only", () => {
     const [text] = texts(whatsAppForAllUpcoming(OWNER, [REX, MILO]));
 
-    expect(text).toContain("Rex (Grooming completo)");
-    expect(text).toContain("Milo (Baño)");
+    expect(text).toContain("• Rex: Jueves 10 de Septiembre 2026");
+    expect(text).toContain("• Milo: Viernes 11 de Septiembre 2026");
   });
 
   it("explains there is nothing to send when there are no upcoming appointments", () => {
@@ -111,7 +111,6 @@ describe("whatsAppForAllUpcoming (HU-7.1)", () => {
     const many = Array.from({ length: 40 }, (_, i) => ({
       pet: { name: `Mascota con nombre largo ${i + 1}` },
       date: `2027-${String((i % 12) + 1).padStart(2, "0")}-15`,
-      serviceName: "Grooming completo",
     }));
     const result = whatsAppForAllUpcoming(OWNER, many);
     if (!result.ok) throw new Error(result.error);
@@ -120,7 +119,7 @@ describe("whatsAppForAllUpcoming (HU-7.1)", () => {
     for (const message of result.messages)
       expect(message.url.length).toBeLessThanOrEqual(MAX_URL_LENGTH);
     const all = result.messages.map((m) => m.text).join("\n");
-    for (const pet of many) expect(all).toContain(`• ${pet.pet.name} (`);
+    for (const pet of many) expect(all).toContain(`• ${pet.pet.name}: `);
     expect(result.messages[0].text).toContain(`(1/${result.messages.length})`);
   });
 
