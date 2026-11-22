@@ -46,7 +46,13 @@ vi.mock("../lib/services-api", () => ({
 }));
 vi.mock("../lib/shop-config-api", () => ({
   shopConfigApi: {
-    get: () => Promise.resolve({ maxPetsPerDay: 8, openTime: "08:00", closeTime: "18:00" }),
+    get: () =>
+      Promise.resolve({
+        maxPetsPerDay: 8,
+        openTime: "08:00",
+        closeTime: "18:00",
+        openWeekdays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+      }),
   },
 }));
 vi.mock("../lib/appointments-api", () => ({
@@ -149,5 +155,19 @@ describe("useAppointmentForm — servicio (Épica 8)", () => {
 
     expect(result.current.service).toBe(OLD.id);
     expect(result.current.serviceOptions.map((o) => o.label)).toContain("Deslanado (desactivado)");
+  });
+
+  it("blocks a Sunday with the shop's message (2026-12-13 es domingo)", async () => {
+    const { result } = await renderForm();
+
+    act(() => {
+      result.current.register("date").onChange({ target: { value: "2026-12-13", name: "date" } });
+    });
+
+    await waitFor(() =>
+      expect(result.current.closedDayError).toBe(
+        "La tienda no atiende los domingos. Elegí otro día.",
+      ),
+    );
   });
 });

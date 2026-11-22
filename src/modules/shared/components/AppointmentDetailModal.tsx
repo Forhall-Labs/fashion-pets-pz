@@ -47,6 +47,7 @@ export function AppointmentDetailModal({
     ownerSectionError,
     loc,
     serviceName,
+    closedDayWarning,
     whatsApp,
     goToOwner,
   } = useAppointmentDetailModal(appointmentId, onClose);
@@ -125,6 +126,11 @@ export function AppointmentDetailModal({
         {appt.source === "auto_scheduled" ? " · Origen: automática" : null}
       </p>
       {appt.flaggedReason ? <p className="text-small">{appt.flaggedReason}</p> : null}
+      {closedDayWarning ? (
+        <p className="text-small" role="alert" style={{ color: "var(--color-danger)" }}>
+          {closedDayWarning}
+        </p>
+      ) : null}
       {pet.needsPickup ? (
         <p className="text-small" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <MapPinIcon size={14} /> {loc?.address || "Ubicación faltante"}

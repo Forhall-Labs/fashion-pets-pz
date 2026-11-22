@@ -85,6 +85,8 @@ export interface BlackoutPeriod {
 
 export interface ShopConfig {
   maxPetsPerDay: number;
+  /** Días de la semana que se atiende (por defecto lunes a sábado). */
+  openWeekdays: Weekday[];
   openTime: string;
   closeTime: string;
 }

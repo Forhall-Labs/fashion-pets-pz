@@ -15,6 +15,7 @@ import { useRescheduleAppointment } from "@/modules/shared/hooks/useRescheduleAp
 import type { Appointment } from "@/modules/shared/types";
 
 import { GenerateYearModal } from "./GenerateYearModal";
+import { DEFAULT_OPEN_WEEKDAYS } from "@/modules/shared/lib/open-days";
 import { RbcCalendar, type PendingMove } from "./RbcCalendar";
 import { TodayAgendaPanel } from "./TodayAgendaPanel";
 import { YearGrid } from "./CalendarGrids";
@@ -49,6 +50,7 @@ export function AgendaView() {
     appointments,
     petsById,
     blackoutPeriods,
+    shopConfig,
     todayAppointments,
     todayLoading,
     loading,
@@ -122,6 +124,7 @@ export function AgendaView() {
           appointments={appointments}
           petsById={petsById}
           blackoutPeriods={blackoutPeriods}
+          openWeekdays={shopConfig?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS}
           onOpenAppointment={openAppointment}
           pendingMove={pendingMove}
           onDropPending={setPendingMove}

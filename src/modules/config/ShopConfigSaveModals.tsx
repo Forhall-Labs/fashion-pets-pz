@@ -21,7 +21,7 @@ export function ShopConfigSaveModals({ save }: { save: ShopConfigSave }) {
             <p className="modal-body-text">
               {outOfHours.length === 1
                 ? "Esta cita quedaría fuera del nuevo horario de atención:"
-                : `Estas ${outOfHours.length} citas quedarían fuera del nuevo horario de atención:`}
+                : `Estas ${outOfHours.length} citas quedarían fuera del nuevo horario o días de atención:`}
             </p>
             <ul className="modal-body-text">
               {outOfHours.map((a) => (

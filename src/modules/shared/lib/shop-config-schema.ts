@@ -33,6 +33,7 @@ export const hoursFormSchema = z
   .object({
     openTime: z.string().min(1, REQUIRED_HOURS),
     closeTime: z.string().min(1, REQUIRED_HOURS),
+    openWeekdays: z.array(z.string()).min(1, "Elegí al menos un día de atención."),
   })
   .refine((v) => !v.openTime || !v.closeTime || v.closeTime > v.openTime, {
     path: ["closeTime"],

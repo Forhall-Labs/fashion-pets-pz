@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
 import { WarningIcon } from "@/modules/shared/components/WarningIcon";
+import { DAY_LABEL, DAY_OPTIONS } from "@/modules/shared/lib/labels";
 import { shopConfigApi } from "@/modules/shared/lib/shop-config-api";
 import type { ShopConfig } from "@/modules/shared/types";
 
@@ -94,7 +95,9 @@ function HoursSection({ config }: { config: ShopConfig }) {
   return (
     <div className="config-section card">
       <h2 className="text-h2">Horario de atención</h2>
-      <span className="text-small">Las citas solo pueden agendarse dentro de este horario.</span>
+      <span className="text-small">
+        Las citas solo pueden agendarse en estos días y dentro de este horario.
+      </span>
       <form className="field-row" onSubmit={handleSubmit} noValidate>
         <div className={`field ${errors.openTime ? "has-error" : ""}`}>
           <label htmlFor="cf-open">Apertura</label>
@@ -106,6 +109,23 @@ function HoursSection({ config }: { config: ShopConfig }) {
           <span className="error-msg">{hoursError}</span>
         </div>
         <SaveButton busy={save.busy} saved={save.saved} />
+        <fieldset
+          className={`field ${errors.openWeekdays ? "has-error" : ""}`}
+          style={{ border: 0, padding: 0, margin: 0, flexBasis: "100%" }}
+        >
+          <legend className="text-small" style={{ fontWeight: 600 }}>
+            Días de atención
+          </legend>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-3)" }}>
+            {DAY_OPTIONS.map((d) => (
+              <label className="checkbox-field" key={d} style={{ margin: 0 }}>
+                <input type="checkbox" value={d} {...register("openWeekdays")} />
+                {DAY_LABEL[d]}
+              </label>
+            ))}
+          </div>
+          <span className="error-msg">{errors.openWeekdays?.message}</span>
+        </fieldset>
       </form>
       <ShopConfigSaveModals save={save} />
     </div>

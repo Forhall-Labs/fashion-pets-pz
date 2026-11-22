@@ -29,6 +29,7 @@ export interface ShopConfigImpactParams {
   openTime?: string;
   closeTime?: string;
   maxPetsPerDay?: number;
+  openWeekdays?: string[];
 }
 
 export const shopConfigApi = {
@@ -38,7 +39,9 @@ export const shopConfigApi = {
   // HU-4.2/4.3: qué citas futuras quedarían en infracción con estos valores.
   impact: (params: ShopConfigImpactParams) =>
     apiClient
-      .get<ShopConfigImpact>(`/shop-config/impact${toQueryString({ ...params })}`)
+      .get<ShopConfigImpact>(
+        `/shop-config/impact${toQueryString({ ...params, openWeekdays: params.openWeekdays?.join(",") })}`,
+      )
       .then((impact) => ({
         ...impact,
         outOfHours: impact.outOfHours.map((a) => ({ ...a, startTime: a.startTime.slice(0, 5) })),

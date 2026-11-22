@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Appointment, Pet } from "@/modules/shared/types";
 
-import { useAppointmentTile } from "./useAppointmentTile";
+import { appointmentTileClasses, useAppointmentTile } from "./useAppointmentTile";
 
 const basePet: Pet = {
   id: "p1",
@@ -74,5 +74,22 @@ describe("useAppointmentTile", () => {
     expect(stopPropagation).toHaveBeenCalledOnce();
     expect(onOpen).toHaveBeenCalledTimes(1);
     expect(onOpen).toHaveBeenCalledWith("a1");
+  });
+});
+
+describe("appointmentTileClasses — días de atención", () => {
+  const monToSat = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+
+  it("flags an active appointment that fell on a closed day (2026-08-30 es domingo)", () => {
+    expect(appointmentTileClasses(baseAppt, monToSat)).toContain("is-exception");
+  });
+
+  it("does not flag it on an open day, nor when it is already cancelled", () => {
+    expect(appointmentTileClasses({ ...baseAppt, date: "2026-08-31" }, monToSat)).not.toContain(
+      "is-exception",
+    );
+    expect(appointmentTileClasses({ ...baseAppt, status: "cancelled" }, monToSat)).not.toContain(
+      "is-exception",
+    );
   });
 });
