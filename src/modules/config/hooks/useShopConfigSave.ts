@@ -76,6 +76,7 @@ export function useShopConfigSave(kind: ImpactKind, onCancel?: () => void) {
           openTime: input.openTime,
           closeTime: input.closeTime,
           maxPetsPerDay: input.maxPetsPerDay,
+          openWeekdays: input.openWeekdays,
         }),
       );
     } catch {

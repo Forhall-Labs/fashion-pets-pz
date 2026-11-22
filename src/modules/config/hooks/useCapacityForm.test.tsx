@@ -20,6 +20,7 @@ vi.mock("@/modules/shared/lib/supabase-client", () => ({
 
 const CONFIG = {
   maxPetsPerDay: 6,
+  openWeekdays: ["monday" as const],
   openTime: "09:00",
   closeTime: "18:00",
 };

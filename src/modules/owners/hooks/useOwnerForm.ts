@@ -4,13 +4,16 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { digitsOnly } from "@/modules/shared/lib/date-utils";
 import { translateApiError } from "@/modules/shared/lib/api-errors";
 import { pointChange, toMapPoint, type MapPoint } from "@/modules/shared/lib/map-point";
 import { ownerFormSchema, type OwnerFormValues } from "@/modules/shared/lib/owner-schema";
 import { ownersApi, type OwnerInput } from "@/modules/shared/lib/owners-api";
+import { DAY_OPTIONS } from "@/modules/shared/lib/labels";
+import { DEFAULT_OPEN_WEEKDAYS } from "@/modules/shared/lib/open-days";
+import { shopConfigApi } from "@/modules/shared/lib/shop-config-api";
 import type { Owner, Weekday } from "@/modules/shared/types";
 
 type Conflict =
@@ -35,6 +38,13 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
   const editing = owner != null;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
+  const openWeekdays = shopConfigQuery.data?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS;
+  // Solo días en que se atiende. Si el dueño ya tenía uno que después se
+  // cerró, se sigue mostrando para no perderlo sin aviso.
+  const dayOptions = DAY_OPTIONS.filter(
+    (d) => openWeekdays.includes(d) || d === owner?.fixedVisitDay,
+  );
   // Estable durante toda la sesión de este form (una key nueva por
   // apertura, no por cada intento de submit) — así un reintento manual
   // después de un timeout/confirmación perdida no crea un dueño duplicado.
@@ -135,6 +145,7 @@ export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }:
     register,
     errors,
     setValue,
+    dayOptions,
     point: watch("point"),
     setPoint,
     showMap,

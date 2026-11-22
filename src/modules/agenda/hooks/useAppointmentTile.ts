@@ -2,17 +2,25 @@
 
 import type { MouseEvent } from "react";
 
-import type { Appointment, Pet } from "@/modules/shared/types";
+import { isOpenDayISO } from "@/modules/shared/lib/open-days";
+import type { Appointment, Pet, Weekday } from "@/modules/shared/types";
 
 // Función plana (no hook) para poder usarla también desde eventPropGetter
 // de RbcCalendar.tsx, que no es un componente ni un hook — llamar ahí a
 // useAppointmentTile violaría react-hooks/rules-of-hooks aunque la función
 // en sí no use ningún hook real internamente.
-export function appointmentTileClasses(appt: Appointment): string[] {
+export function appointmentTileClasses(
+  appt: Appointment,
+  openWeekdays?: readonly Weekday[],
+): string[] {
   const classes = ["appt-tile"];
   if (appt.serviceType === "quick_service") classes.push("is-quick");
   if (appt.source === "auto_scheduled") classes.push("is-auto");
-  if (appt.flaggedReason) classes.push("is-exception");
+  // Una cita activa en un día que no se atiende se marca como excepción
+  // para que se reprograme a mano.
+  const onClosedDay =
+    appt.status === "scheduled" && openWeekdays && !isOpenDayISO(appt.date, openWeekdays);
+  if (appt.flaggedReason || onClosedDay) classes.push("is-exception");
   return classes;
 }
 

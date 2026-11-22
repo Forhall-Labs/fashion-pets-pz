@@ -4,7 +4,7 @@ import { ErrorModal } from "@/modules/shared/components/ErrorModal";
 import { LocationPicker } from "@/modules/shared/components/LocationPicker";
 import { Modal, ModalHeader } from "@/modules/shared/components/Modal";
 import { PawPrintsSpinner } from "@/modules/shared/components/PawPrintsSpinner";
-import { DAY_LABEL, DAY_OPTIONS } from "@/modules/shared/lib/labels";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
 import type { Owner } from "@/modules/shared/types";
 
 import { useOwnerForm } from "./hooks/useOwnerForm";
@@ -24,6 +24,7 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
     editing,
     register,
     errors,
+    dayOptions,
     point,
     setPoint,
     showMap,
@@ -135,7 +136,7 @@ export function OwnerForm({ owner = null, existingOwners, onSaved, onClose }: Ow
             <label htmlFor="of-day">Día fijo de visita</label>
             <select id="of-day" {...register("fixedVisitDay")}>
               <option value="">Sin preferencia</option>
-              {DAY_OPTIONS.map((d) => (
+              {dayOptions.map((d) => (
                 <option key={d} value={d}>
                   {DAY_LABEL[d]}
                 </option>

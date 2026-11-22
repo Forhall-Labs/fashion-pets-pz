@@ -38,6 +38,7 @@ export function AppointmentForm({
     handlePetChange,
     handleServiceChange,
     hoursError,
+    closedDayError,
     dayDeviationWarning,
     submitting,
     error,
@@ -93,12 +94,12 @@ export function AppointmentForm({
 
           <div className="field-row">
             <div
-              className={`field ${errors.date ? "has-error" : dayDeviationWarning ? "has-warning" : ""}`}
+              className={`field ${errors.date || closedDayError ? "has-error" : dayDeviationWarning ? "has-warning" : ""}`}
             >
               <label htmlFor="af-date">Fecha</label>
               <input type="date" id="af-date" {...register("date")} />
-              {errors.date?.message ? (
-                <span className="error-msg">{errors.date.message}</span>
+              {errors.date?.message || closedDayError ? (
+                <span className="error-msg">{errors.date?.message ?? closedDayError}</span>
               ) : dayDeviationWarning ? (
                 <span className="hint-warning">{dayDeviationWarning}</span>
               ) : null}
@@ -122,8 +123,8 @@ export function AppointmentForm({
             <button
               type="submit"
               className={`btn btn-primary ${submitting ? "btn-loading" : ""}`}
-              disabled={submitting || !!hoursError}
-              title={hoursError ?? undefined}
+              disabled={submitting || !!hoursError || !!closedDayError}
+              title={closedDayError ?? hoursError ?? undefined}
             >
               {submitting ? <PawPrintsSpinner /> : "Guardar"}
             </button>

@@ -313,6 +313,7 @@ export function buildInitialData(): MockData {
 
   const shopConfig: MockData["shopConfig"] = {
     maxPetsPerDay: 6,
+    openWeekdays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
     openTime: "09:00",
     closeTime: "18:00",
   };

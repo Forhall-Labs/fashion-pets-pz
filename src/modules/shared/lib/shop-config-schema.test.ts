@@ -24,8 +24,8 @@ describe("capacityFormSchema (HU-4.2 @validation)", () => {
 });
 
 describe("hoursFormSchema (HU-4.3 @validation)", () => {
-  function hoursError(openTime: string, closeTime: string) {
-    const result = hoursFormSchema.safeParse({ openTime, closeTime });
+  function hoursError(openTime: string, closeTime: string, openWeekdays = ["monday"]) {
+    const result = hoursFormSchema.safeParse({ openTime, closeTime, openWeekdays });
     return result.success ? null : result.error.issues[0].message;
   }
 
@@ -40,6 +40,10 @@ describe("hoursFormSchema (HU-4.3 @validation)", () => {
 
   it("requires both times", () => {
     expect(hoursError("09:00", "")).toContain("obligatorios");
+  });
+
+  it("requires at least one open weekday", () => {
+    expect(hoursError("09:00", "18:00", [])).toBe("Elegí al menos un día de atención.");
   });
 });
 

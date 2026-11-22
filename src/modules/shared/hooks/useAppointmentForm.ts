@@ -10,6 +10,7 @@ import { appointmentFormSchema, type AppointmentFormValues } from "../lib/appoin
 import { appointmentsApi, type AppointmentInput } from "../lib/appointments-api";
 import { fromISODate, minutesToTime, timeToMinutes } from "../lib/date-utils";
 import { DAY_LABEL, DAY_OPTIONS, FULL_GROOM_LABEL } from "../lib/labels";
+import { closedDayMessage, DEFAULT_OPEN_WEEKDAYS, isOpenDayISO } from "../lib/open-days";
 import { durationFor } from "../lib/service-catalog";
 import { shopConfigApi } from "../lib/shop-config-api";
 import type { Appointment, Weekday } from "../types";
@@ -96,6 +97,11 @@ export function useAppointmentForm({
   // otras 3 reglas (blackout/capacidad/overlap) necesitan datos que este
   // formulario no trae hoy (períodos de blackout, conteo del día, citas de
   // la mascota) — esas se quedan como venían, validadas solo por el backend.
+  // Espejo de la regla de días de atención del backend: se avisa al elegir
+  // la fecha y bloquea Guardar, como hoursError.
+  const openWeekdays = shopConfigQuery.data?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS;
+  const closedDayError = date && !isOpenDayISO(date, openWeekdays) ? closedDayMessage(date) : null;
+
   const hoursError = (() => {
     const config = shopConfigQuery.data;
     const duration = Number(durationMinutesInput);
@@ -212,6 +218,7 @@ export function useAppointmentForm({
     handlePetChange,
     handleServiceChange,
     hoursError,
+    closedDayError,
     dayDeviationWarning,
     submitting: mutation.isPending,
     error,

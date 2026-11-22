@@ -7,7 +7,9 @@ import { appointmentsApi } from "../lib/appointments-api";
 import { petsApi } from "../lib/pets-api";
 import { ownersApi } from "../lib/owners-api";
 import { ApiError } from "../lib/api-client";
+import { closedDayMessage, DEFAULT_OPEN_WEEKDAYS, isOpenDayISO } from "../lib/open-days";
 import { serviceNameOf } from "../lib/service-catalog";
+import { shopConfigApi } from "../lib/shop-config-api";
 import { whatsAppForAppointment } from "../lib/whatsapp";
 import { useServices } from "./useServices";
 
@@ -58,6 +60,14 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
     : null;
 
   const { servicesById } = useServices();
+  const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
+  const openWeekdays = shopConfigQuery.data?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS;
+  // Una cita activa que quedó en un día que no se atiende (p. ej. una manual
+  // en domingo de antes de la regla): se avisa para reprogramarla a mano.
+  const closedDayWarning =
+    appt && appt.status === "scheduled" && !isOpenDayISO(appt.date, openWeekdays)
+      ? `${closedDayMessage(appt.date).replace(" Elegí otro día.", "")} Reprogramá esta cita.`
+      : null;
   const serviceName = appt ? serviceNameOf(appt, servicesById) : "";
   const whatsApp = appt && pet && owner ? whatsAppForAppointment({ ...appt, pet }, owner) : null;
 
@@ -89,6 +99,7 @@ export function useAppointmentDetailModal(appointmentId: string, onClose: () => 
     ownerSectionError: !!ownerId && (!!ownerQuery.error || isNotFound(ownerQuery.error)),
     loc,
     serviceName,
+    closedDayWarning,
     whatsApp,
     goToOwner,
   };

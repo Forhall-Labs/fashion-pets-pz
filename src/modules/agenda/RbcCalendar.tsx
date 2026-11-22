@@ -11,7 +11,8 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 import { isDateBlackedOut, timeOfDay, toISODate } from "@/modules/shared/lib/date-utils";
-import type { Appointment, BlackoutPeriod, Pet } from "@/modules/shared/types";
+import { isOpenDayISO } from "@/modules/shared/lib/open-days";
+import type { Appointment, BlackoutPeriod, Pet, Weekday } from "@/modules/shared/types";
 
 import { appointmentTileClasses, useAppointmentTile } from "./hooks/useAppointmentTile";
 
@@ -57,18 +58,24 @@ function EventContent({ event }: { event: RbcEvent }) {
   );
 }
 
-function eventPropGetter(event: RbcEvent) {
-  return { className: appointmentTileClasses(event.resource.appt).join(" ") };
+function makeEventPropGetter(openWeekdays: readonly Weekday[]) {
+  return (event: RbcEvent) => ({
+    className: appointmentTileClasses(event.resource.appt, openWeekdays).join(" "),
+  });
 }
 
 // dayPropGetter cubre tanto la celda de Mes como la columna de fondo de
 // Día/Semana en el time-grid — un solo prop resalta blackout en las 3
 // vistas. Mismo patrón visual (rayado) que ya usaba .cal-cell.is-blackout
 // en el grid custom viejo y .cal-year-mini-day.is-blackout en Año.
-function makeDayPropGetter(blackoutPeriods: BlackoutPeriod[]) {
+// Los días que no se atiende (p. ej. domingo) llevan el mismo rayado.
+function makeDayPropGetter(blackoutPeriods: BlackoutPeriod[], openWeekdays: readonly Weekday[]) {
   return (date: Date) => {
-    if (!isDateBlackedOut(toISODate(date), blackoutPeriods)) return {};
-    return { className: "is-blackout" };
+    const iso = toISODate(date);
+    if (isDateBlackedOut(iso, blackoutPeriods) || !isOpenDayISO(iso, openWeekdays)) {
+      return { className: "is-blackout" };
+    }
+    return {};
   };
 }
 
@@ -91,6 +98,7 @@ interface RbcCalendarProps {
   appointments: Appointment[];
   petsById: Map<string, Pet>;
   blackoutPeriods: BlackoutPeriod[];
+  openWeekdays: readonly Weekday[];
   onOpenAppointment: (id: string) => void;
   pendingMove: PendingMove | null;
   onDropPending: (move: PendingMove) => void;
@@ -103,12 +111,17 @@ export function RbcCalendar({
   appointments,
   petsById,
   blackoutPeriods,
+  openWeekdays,
   onOpenAppointment,
   pendingMove,
   onDropPending,
   onDrillDown,
 }: RbcCalendarProps) {
-  const dayPropGetter = useMemo(() => makeDayPropGetter(blackoutPeriods), [blackoutPeriods]);
+  const dayPropGetter = useMemo(
+    () => makeDayPropGetter(blackoutPeriods, openWeekdays),
+    [blackoutPeriods, openWeekdays],
+  );
+  const eventPropGetter = useMemo(() => makeEventPropGetter(openWeekdays), [openWeekdays]);
   // Al arrastrar, el tile se mueve al toque (esta lista ya sale con la fecha/
   // hora nueva) pero todavía no se manda ningún PATCH — eso queda para
   // cuando el usuario confirma en el modal que AgendaView abre al recibir
