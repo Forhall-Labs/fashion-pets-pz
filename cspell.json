@@ -1,8 +1,19 @@
 {
   "version": "0.2",
   "language": "en,es",
-  "import": ["@cspell/dict-es-es/cspell-ext.json"],
-  "dictionaries": ["typescript", "node", "npm", "css", "html", "softwareTerms", "fonts", "es-es"],
+  "import": [
+    "@cspell/dict-es-es/cspell-ext.json"
+  ],
+  "dictionaries": [
+    "typescript",
+    "node",
+    "npm",
+    "css",
+    "html",
+    "softwareTerms",
+    "fonts",
+    "es-es"
+  ],
   "words": [
     "accionable",
     "agendamiento",
@@ -20,6 +31,7 @@
     "bloqueante",
     "bloqueantes",
     "CABA",
+    "Cargáselo",
     "cerrable",
     "claude",
     "clicables",
@@ -28,6 +40,7 @@
     "commitear",
     "Configurá",
     "configurarlos",
+    "confirmalo",
     "Confirmás",
     "contrafase",
     "Copialo",
@@ -75,6 +88,7 @@
     "NestJS",
     "Nextjs",
     "Nominatim",
+    "nosize",
     "nosniff",
     "onrender",
     "podés",
@@ -98,6 +112,7 @@
     "revisá",
     "Revisá",
     "revisala",
+    "Revisalo",
     "Rivadavia",
     "saturday",
     "schedulable",
