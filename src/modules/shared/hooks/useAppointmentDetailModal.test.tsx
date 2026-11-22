@@ -55,7 +55,7 @@ const PET = {
 const OWNER = {
   id: "o1",
   name: "María Fernández",
-  phone: "01140000303",
+  phone: "+506 8888-0303",
   address: null,
   lat: null,
   lng: null,
@@ -96,7 +96,8 @@ describe("useAppointmentDetailModal", () => {
     expect(result.current.appt?.id).toBe("a1");
     expect(result.current.pet?.name).toBe("Rex");
     expect(result.current.owner?.name).toBe("María Fernández");
-    expect(result.current.waLink).toContain("wa.me");
+    const whatsApp = result.current.whatsApp;
+    expect(whatsApp?.ok && whatsApp.messages[0].url).toContain("https://wa.me/50688880303");
     expect(result.current.notFound).toBe(false);
   });
 
@@ -137,7 +138,7 @@ describe("useAppointmentDetailModal", () => {
     await waitFor(() => expect(result.current.ownerSectionError).toBe(true));
     expect(result.current.notFound).toBe(false);
     expect(result.current.pet?.name).toBe("Rex");
-    expect(result.current.waLink).toBeNull();
+    expect(result.current.whatsApp).toBeNull();
   });
 
   it("closes the modal and navigates to the owner's page", async () => {
