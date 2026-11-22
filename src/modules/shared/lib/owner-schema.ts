@@ -17,6 +17,8 @@ export const ownerFormSchema = z.object({
       return digits >= 7 && digits <= 15;
     }, "Ingresá un teléfono válido (7 a 15 dígitos)."),
   address: z.string().trim(),
+  // Punto marcado a mano (opcional). Si no hay, el API geocodifica `address`.
+  point: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   fixedVisitDay: z.string(),
 });
 

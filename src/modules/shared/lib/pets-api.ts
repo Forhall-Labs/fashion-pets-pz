@@ -3,6 +3,7 @@
 
 import type { GroomingFrequency, Pet, PetSize } from "../types";
 import { apiClient, toQueryString, type Page } from "./api-client";
+import type { MapPoint } from "./map-point";
 
 interface PetRecord {
   id: string;
@@ -44,6 +45,8 @@ export interface PetInput {
   isAggressive: boolean;
   needsPickup: boolean;
   locationAddress: string | null;
+  /** Ver pointChange(): undefined = no cambió, null = se quitó el punto. */
+  locationPoint?: MapPoint | null;
   groomingFrequency: GroomingFrequency | null;
   avgServiceDuration: number | null;
 }
@@ -57,6 +60,10 @@ function toBody(input: PetInput) {
     isAggressive: input.isAggressive,
     needsPickup: input.needsPickup,
     locationAddress: input.locationAddress || null,
+    ...(input.locationPoint !== undefined && {
+      locationLat: input.locationPoint?.lat ?? null,
+      locationLng: input.locationPoint?.lng ?? null,
+    }),
     groomingFrequency: input.groomingFrequency || null,
     avgServiceDurationMinutes: input.avgServiceDuration || null,
   };
