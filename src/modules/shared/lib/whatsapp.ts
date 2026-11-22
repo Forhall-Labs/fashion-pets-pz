@@ -4,10 +4,11 @@
 //
 // HU-7.1: en vez de devolver un link o null, devuelve el motivo exacto por el
 // que no se puede armar (teléfono, dato faltante, sin citas) para mostrarlo
-// en pantalla. La hora de la cita no va en el mensaje, a pedido del cliente.
+// en pantalla. El recordatorio dice solo qué mascota tiene cita y qué día:
+// sin hora ni tipo de servicio, a pedido del cliente (2026-11-21).
 
 import { formatDateLong } from "./date-utils";
-import type { Owner, Pet, ServiceType } from "../types";
+import type { Owner, Pet } from "../types";
 
 // Los clientes son de Costa Rica: un número local tiene 8 dígitos y el código
 // de país es 506. Un número con más dígitos se toma como que ya trae código;
@@ -31,7 +32,6 @@ export type WhatsAppResult =
 export interface UpcomingForWhatsApp {
   pet: Pick<Pet, "name">;
   date: string;
-  serviceType: ServiceType;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -69,14 +69,6 @@ function missingDetail(item: UpcomingForWhatsApp): string | null {
   return null;
 }
 
-function serviceLabel(serviceType: ServiceType): string {
-  return serviceType === "quick_service" ? "servicio rápido" : "grooming completo";
-}
-
-function dateLabel(iso: string): string {
-  return `${formatDateLong(iso)} (${iso})`;
-}
-
 function toMessage(digits: string, text: string): WhatsAppMessage {
   return { text, url: `https://wa.me/${digits}?text=${encodeURIComponent(text)}` };
 }
@@ -90,8 +82,7 @@ export function whatsAppForAppointment(
   const missing = missingDetail(appt);
   if (missing) return fail(missing);
 
-  const kind = appt.serviceType === "quick_service" ? "un servicio rápido" : "un grooming completo";
-  const text = `Hola ${owner.name}! Te recordamos ${kind} para ${appt.pet.name} el ${dateLabel(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
+  const text = `Hola ${owner.name}! Te recordamos que ${appt.pet.name} tiene cita el ${formatDateLong(appt.date)}. ¡Te esperamos en la peluquería! 🐾`;
   return { ok: true, messages: [toMessage(phone.digits, text)] };
 }
 
@@ -108,9 +99,7 @@ export function whatsAppForAllUpcoming(
   }
   if (upcoming.length === 1) return whatsAppForAppointment(upcoming[0], owner);
 
-  const lines = upcoming.map(
-    (a) => `• ${a.pet.name} (${serviceLabel(a.serviceType)}): ${dateLabel(a.date)}`,
-  );
+  const lines = upcoming.map((a) => `• ${a.pet.name}: ${formatDateLong(a.date)}`);
   const footer = "¡Te esperamos! 🐾";
   const header = (part: string) => `Hola ${owner.name}! Te recordamos las próximas citas${part}:`;
   const compose = (part: string, chunk: string[]) => [header(part), ...chunk, footer].join("\n");
