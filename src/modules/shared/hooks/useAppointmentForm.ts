@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { fromISODate, minutesToTime, timeToMinutes } from "../lib/date-utils";
 import { DAY_LABEL, DAY_OPTIONS, FULL_GROOM_LABEL } from "../lib/labels";
 import { closedDayMessage, DEFAULT_OPEN_WEEKDAYS, isOpenDayISO } from "../lib/open-days";
 import { durationFor } from "../lib/service-catalog";
+import { waitingListApi } from "../lib/waiting-list-api";
 import { shopConfigApi } from "../lib/shop-config-api";
 import type { Appointment, Weekday } from "../types";
 import { usePetOptions } from "./usePetOptions";
@@ -35,6 +36,7 @@ interface UseAppointmentFormArgs {
   appointment?: Appointment | null;
   presetDate?: string;
   presetPetId?: string;
+  waitingEntryId?: string;
   onSaved?: (appt: Appointment) => void;
   onClose: () => void;
 }
@@ -47,6 +49,7 @@ export function useAppointmentForm({
   appointment = null,
   presetDate,
   presetPetId,
+  waitingEntryId,
   onSaved,
   onClose,
 }: UseAppointmentFormArgs) {
@@ -63,6 +66,7 @@ export function useAppointmentForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentFormSchema),
@@ -155,6 +159,15 @@ export function useAppointmentForm({
     }
   }
 
+  // Mascota precargada (p. ej. desde el panel de lista de espera): la
+  // duración se completa apenas llegan los datos de las mascotas.
+  const presetPet = !editing && presetPetId ? pets.find((p) => p.id === presetPetId) : undefined;
+  useEffect(() => {
+    if (presetPet?.avgServiceDuration && !getValues("durationMinutes")) {
+      setValue("durationMinutes", String(presetPet.avgServiceDuration));
+    }
+  }, [presetPet, getValues, setValue]);
+
   function handlePetChange(nextPetId: string) {
     setValue("petId", nextPetId, { shouldValidate: true });
     autofillDuration(nextPetId, service);
@@ -170,6 +183,8 @@ export function useAppointmentForm({
   const serviceOptions = useMemo(() => {
     const current = appointment?.serviceId ? servicesById.get(appointment.serviceId) : undefined;
     const catalog = current && !current.active ? [...activeServices, current] : activeServices;
+    // La aprobación de lista de espera siempre agenda grooming completo.
+    if (waitingEntryId) return [{ value: FULL_GROOM, label: FULL_GROOM_LABEL }];
     return [
       { value: FULL_GROOM, label: FULL_GROOM_LABEL },
       ...catalog.map((s) => ({
@@ -177,15 +192,26 @@ export function useAppointmentForm({
         label: s.active ? s.name : `${s.name} (desactivado)`,
       })),
     ];
-  }, [activeServices, servicesById, appointment?.serviceId]);
+  }, [activeServices, servicesById, appointment?.serviceId, waitingEntryId]);
 
   const mutation = useMutation({
     mutationFn: (input: AppointmentInput) =>
       editing
         ? appointmentsApi.update(appointment.id, input)
-        : appointmentsApi.create(input, idempotencyKey),
+        : waitingEntryId
+          ? // Desde el panel de lista de espera: la aprobación crea la cita
+            // (grooming completo, origen "lista de espera") y saca la entrada.
+            waitingListApi
+              .approve(waitingEntryId, {
+                date: input.date,
+                startTime: input.startTime,
+                durationMinutes: input.durationMinutes,
+              })
+              .then((r) => r.appointment)
+          : appointmentsApi.create(input, idempotencyKey),
     onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      if (waitingEntryId) void queryClient.invalidateQueries({ queryKey: ["waiting-list"] });
       onSaved?.(saved);
       onClose();
     },
@@ -214,7 +240,8 @@ export function useAppointmentForm({
     petId,
     service,
     serviceOptions,
-    noCatalogServices: activeServices.length === 0,
+    noCatalogServices: !waitingEntryId && activeServices.length === 0,
+    fromWaitingList: !!waitingEntryId,
     handlePetChange,
     handleServiceChange,
     hoursError,

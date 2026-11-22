@@ -5,9 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { waitingListApi, type WaitingEntry } from "@/modules/shared/lib/waiting-list-api";
 
-export function waitingDays(createdAt: string, now = Date.now()) {
-  return Math.max(0, Math.floor((now - Date.parse(createdAt)) / 86_400_000));
-}
+export { waitingDays } from "@/modules/shared/lib/waiting-list-format";
 
 // Pantalla "Lista de espera" (HU-5.1) contra la API real.
 export function useWaitingListView() {
