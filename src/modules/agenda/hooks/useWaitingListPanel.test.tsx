@@ -20,8 +20,12 @@ const entry = (id: string, size: string, daysAgo: number, stale = false): Waitin
 });
 
 const list = vi.fn();
+const remove = vi.fn();
 vi.mock("@/modules/shared/lib/waiting-list-api", () => ({
-  waitingListApi: { list: () => list() },
+  waitingListApi: {
+    list: () => list(),
+    remove: (...args: unknown[]) => remove(...args),
+  },
 }));
 vi.mock("@/modules/shared/lib/supabase-client", () => ({
   supabase: { auth: { getSession: () => Promise.resolve({ data: { session: null } }) } },
@@ -32,7 +36,10 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  remove.mockReset();
+});
 
 describe("useWaitingListPanel", () => {
   it("puts whoever waited longest first, with a wait bar relative to them", async () => {
@@ -87,5 +94,54 @@ describe("useWaitingListPanel", () => {
     expect(result.current.open).toBe(true);
     act(() => result.current.toggle());
     expect(result.current.open).toBe(false);
+  });
+
+  describe("limpieza", () => {
+    const stale = [entry("A", "small", 50, true), entry("B", "medium", 40, true)];
+
+    it("removes a single entry pending cleanup", async () => {
+      list.mockResolvedValue([...stale, entry("C", "small", 5)]);
+      remove.mockResolvedValue(undefined);
+      const { result } = renderHook(() => useWaitingListPanel(NOW), { wrapper });
+      await waitFor(() => expect(result.current.items).toHaveLength(3));
+
+      act(() => result.current.removeOne("A"));
+
+      await waitFor(() => expect(remove).toHaveBeenCalledWith("A"));
+      expect(remove).toHaveBeenCalledTimes(1);
+    });
+
+    it("cleans every pending entry only after confirming, and never touches the rest", async () => {
+      list.mockResolvedValue([...stale, entry("C", "small", 5)]);
+      remove.mockResolvedValue(undefined);
+      const { result } = renderHook(() => useWaitingListPanel(NOW), { wrapper });
+      await waitFor(() => expect(result.current.items).toHaveLength(3));
+
+      act(() => result.current.askCleanupAll());
+      expect(result.current.confirmingCleanup).toBe(true);
+      expect(remove).not.toHaveBeenCalled();
+
+      act(() => result.current.confirmCleanupAll());
+
+      await waitFor(() => expect(remove).toHaveBeenCalledTimes(2));
+      expect(remove.mock.calls.map((c) => c[0]).sort()).toEqual(["A", "B"]);
+      await waitFor(() => expect(result.current.confirmingCleanup).toBe(false));
+    });
+
+    it("reports how many could not be removed", async () => {
+      list.mockResolvedValue(stale);
+      remove.mockImplementation((id: string) =>
+        id === "A" ? Promise.reject(new Error("x")) : Promise.resolve(undefined),
+      );
+      const { result } = renderHook(() => useWaitingListPanel(NOW), { wrapper });
+      await waitFor(() => expect(result.current.items).toHaveLength(2));
+
+      act(() => result.current.askCleanupAll());
+      act(() => result.current.confirmCleanupAll());
+
+      await waitFor(() =>
+        expect(result.current.cleanupError).toBe("No se pudo quitar 1 entrada. Probá de nuevo."),
+      );
+    });
   });
 });

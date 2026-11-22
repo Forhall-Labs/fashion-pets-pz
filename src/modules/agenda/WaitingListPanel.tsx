@@ -74,9 +74,19 @@ export function WaitingListPanel({ onSchedule }: WaitingListPanelProps) {
                       {waitingRangeLabel(entry.preferredStartDate, entry.preferredEndDate)}
                     </span>
                     {entry.staleReason ? (
-                      <span className="text-small waiting-panel-stale">
-                        Ya tiene una cita activa: quitala de la lista.
-                      </span>
+                      <div className="waiting-panel-stale-row">
+                        <span className="badge badge-incomplete">Pendiente de limpieza</span>
+                        <span className="text-small waiting-panel-stale">
+                          Ya tiene una cita activa.
+                        </span>
+                        <button
+                          className="btn btn-text btn-sm waiting-panel-action"
+                          onClick={() => p.removeOne(entry.id)}
+                          disabled={p.cleaning}
+                        >
+                          {p.cleaningIds.includes(entry.id) ? "Quitando…" : "Quitar"}
+                        </button>
+                      </div>
                     ) : (
                       <button
                         className="btn btn-text btn-sm waiting-panel-action"
@@ -88,9 +98,45 @@ export function WaitingListPanel({ onSchedule }: WaitingListPanelProps) {
                   </li>
                 ))}
               </ul>
-              {p.staleCount > 0 ? (
-                <p className="text-small">
-                  {p.staleCount} pendiente{p.staleCount === 1 ? "" : "s"} de limpieza.
+              {p.staleCount > 0 && !p.confirmingCleanup ? (
+                <button
+                  className="btn btn-secondary btn-sm waiting-panel-cleanup"
+                  onClick={p.askCleanupAll}
+                  disabled={p.cleaning}
+                >
+                  Limpiar pendientes ({p.staleCount})
+                </button>
+              ) : null}
+              {p.confirmingCleanup ? (
+                <div className="waiting-panel-confirm" role="alertdialog" aria-live="polite">
+                  <p className="text-small">
+                    ¿Quitar{" "}
+                    {p.staleCount === 1
+                      ? "la entrada pendiente"
+                      : `las ${p.staleCount} entradas pendientes`}{" "}
+                    de limpieza? Esas mascotas ya tienen cita activa. No se puede deshacer.
+                  </p>
+                  <div className="waiting-panel-confirm-actions">
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={p.cancelCleanupAll}
+                      disabled={p.cleaning}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      className="btn btn-destructive btn-sm"
+                      onClick={p.confirmCleanupAll}
+                      disabled={p.cleaning}
+                    >
+                      {p.cleaning ? "Quitando…" : `Quitar ${p.staleCount}`}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              {p.cleanupError ? (
+                <p className="text-small waiting-panel-stale" role="alert">
+                  {p.cleanupError}
                 </p>
               ) : null}
             </>

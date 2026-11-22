@@ -777,6 +777,31 @@ textarea {
 .waiting-panel-stale {
   color: var(--color-danger);
 }
+.waiting-panel-stale-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+.waiting-panel-cleanup {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+.waiting-panel-confirm {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: rgba(184, 64, 47, 0.06);
+}
+.waiting-panel-confirm p {
+  margin: 0 0 var(--space-2);
+}
+.waiting-panel-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
 .waiting-panel-action {
   align-self: flex-start;
   padding-left: 0;
