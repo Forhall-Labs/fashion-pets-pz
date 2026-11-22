@@ -10,6 +10,8 @@ interface AppointmentFormProps {
   appointment?: Appointment | null;
   presetDate?: string;
   presetPetId?: string;
+  /** Viene del panel de lista de espera: al guardar se aprueba esa entrada. */
+  waitingEntryId?: string;
   onSaved?: (appt: Appointment) => void;
   onClose: () => void;
 }
@@ -21,6 +23,7 @@ export function AppointmentForm({
   appointment = null,
   presetDate,
   presetPetId,
+  waitingEntryId,
   onSaved,
   onClose,
 }: AppointmentFormProps) {
@@ -35,6 +38,7 @@ export function AppointmentForm({
     service,
     serviceOptions,
     noCatalogServices,
+    fromWaitingList,
     handlePetChange,
     handleServiceChange,
     hoursError,
@@ -44,15 +48,33 @@ export function AppointmentForm({
     error,
     clearError,
     handleSubmit,
-  } = useAppointmentForm({ appointment, presetDate, presetPetId, onSaved, onClose });
+  } = useAppointmentForm({
+    appointment,
+    presetDate,
+    presetPetId,
+    waitingEntryId,
+    onSaved,
+    onClose,
+  });
 
   return (
     <>
       <Modal onClose={onClose}>
         <ModalHeader
-          title={editing ? "Editar / reprogramar cita" : "Nueva cita"}
+          title={
+            editing
+              ? "Editar / reprogramar cita"
+              : fromWaitingList
+                ? "Agendar desde lista de espera"
+                : "Nueva cita"
+          }
           onClose={onClose}
         />
+        {fromWaitingList ? (
+          <p className="text-small" style={{ marginTop: 0 }}>
+            Al guardar, la mascota sale de la lista de espera.
+          </p>
+        ) : null}
         <form onSubmit={handleSubmit}>
           <div className={`field ${errors.petId ? "has-error" : ""}`}>
             <label htmlFor="af-pet">Mascota</label>
@@ -60,7 +82,7 @@ export function AppointmentForm({
               id="af-pet"
               value={petId}
               onChange={(e) => handlePetChange(e.target.value)}
-              disabled={petsLoading}
+              disabled={petsLoading || fromWaitingList}
             >
               <option value="">Seleccioná una mascota…</option>
               {petOptions.map((p) => (

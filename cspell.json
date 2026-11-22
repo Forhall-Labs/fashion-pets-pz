@@ -141,7 +141,9 @@
     "deslanado",
     "reprograme",
     "reprogramarla",
-    "reprogramá"
+    "reprogramá",
+    "quitala",
+    "precargada"
   ],
   "ignorePaths": [
     "node_modules",

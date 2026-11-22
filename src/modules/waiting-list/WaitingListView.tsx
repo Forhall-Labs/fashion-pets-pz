@@ -3,19 +3,12 @@
 import { SizeBadge } from "@/modules/shared/components/Badge";
 import { HourglassIcon } from "@/modules/shared/components/HourglassIcon";
 import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
-import { formatDateShort } from "@/modules/shared/lib/date-utils";
 import { SIZE_LABEL } from "@/modules/shared/lib/labels";
+import { waitingDays, waitingRangeLabel } from "@/modules/shared/lib/waiting-list-format";
 import type { PetSize } from "@/modules/shared/types";
 
 import { WaitingListForm } from "./WaitingListForm";
-import { useWaitingListView, waitingDays } from "./hooks/useWaitingListView";
-
-function rangeLabel(start: string | null, end: string | null) {
-  if (start && end) return `${formatDateShort(start)} – ${formatDateShort(end)}`;
-  if (start) return `Desde ${formatDateShort(start)}`;
-  if (end) return `Hasta ${formatDateShort(end)}`;
-  return "Sin rango preferido";
-}
+import { useWaitingListView } from "./hooks/useWaitingListView";
 
 // Pantalla "Lista de espera" (Épica 5). La recomendación para un lugar
 // liberado no vive acá: se abre sola al cancelar o mover una cita
@@ -72,7 +65,7 @@ export function WaitingListView() {
                     <span className="badge badge-incomplete">Tamaño inválido</span>
                   )}
                   <span className="text-small">
-                    {rangeLabel(w.preferredStartDate, w.preferredEndDate)}
+                    {waitingRangeLabel(w.preferredStartDate, w.preferredEndDate)}
                   </span>
                   <span className="text-small">
                     Esperando hace {days} día{days === 1 ? "" : "s"}

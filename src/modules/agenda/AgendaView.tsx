@@ -16,8 +16,10 @@ import type { Appointment } from "@/modules/shared/types";
 
 import { GenerateYearModal } from "./GenerateYearModal";
 import { DEFAULT_OPEN_WEEKDAYS } from "@/modules/shared/lib/open-days";
+import type { WaitingEntry } from "@/modules/shared/lib/waiting-list-api";
 import { RbcCalendar, type PendingMove } from "./RbcCalendar";
 import { TodayAgendaPanel } from "./TodayAgendaPanel";
+import { WaitingListPanel } from "./WaitingListPanel";
 import { YearGrid } from "./CalendarGrids";
 import { VIEW_TABS, useAgendaView } from "./hooks/useAgendaView";
 import { useAgendaData } from "./hooks/useAgendaData";
@@ -61,7 +63,10 @@ export function AgendaView() {
   const generateYear = useGenerateYear();
 
   const [formState, setFormState] = useState<
-    { mode: "create"; presetDate: string } | { mode: "edit"; appointment: Appointment } | null
+    | { mode: "create"; presetDate: string }
+    | { mode: "edit"; appointment: Appointment }
+    | { mode: "waiting"; entry: WaitingEntry }
+    | null
   >(null);
 
   const {
@@ -188,12 +193,15 @@ export function AgendaView() {
 
       <div className="agenda-with-today-panel">
         <div className="calendar-root">{grid}</div>
-        <TodayAgendaPanel
-          appointments={todayAppointments}
-          petsById={petsById}
-          loading={todayLoading}
-          onOpenAppointment={openAppointment}
-        />
+        <div className="agenda-side">
+          <TodayAgendaPanel
+            appointments={todayAppointments}
+            petsById={petsById}
+            loading={todayLoading}
+            onOpenAppointment={openAppointment}
+          />
+          <WaitingListPanel onSchedule={(entry) => setFormState({ mode: "waiting", entry })} />
+        </div>
       </div>
 
       {openAppointmentId ? (
@@ -211,6 +219,8 @@ export function AgendaView() {
         <AppointmentForm
           appointment={formState.mode === "edit" ? formState.appointment : null}
           presetDate={formState.mode === "create" ? formState.presetDate : undefined}
+          presetPetId={formState.mode === "waiting" ? formState.entry.petId : undefined}
+          waitingEntryId={formState.mode === "waiting" ? formState.entry.id : undefined}
           onClose={() => setFormState(null)}
         />
       ) : null}

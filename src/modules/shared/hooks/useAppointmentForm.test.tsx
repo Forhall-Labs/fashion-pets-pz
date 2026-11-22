@@ -61,6 +61,11 @@ vi.mock("../lib/appointments-api", () => ({
     update: vi.fn(),
   },
 }));
+const approve = vi.fn();
+vi.mock("../lib/waiting-list-api", () => ({
+  waitingListApi: { approve: (...args: unknown[]) => approve(...args) },
+}));
+
 vi.mock("../lib/supabase-client", () => ({
   supabase: { auth: { getSession: () => Promise.resolve({ data: { session: null } }) } },
 }));
@@ -169,5 +174,33 @@ describe("useAppointmentForm — servicio (Épica 8)", () => {
         "La tienda no atiende los domingos. Elegí otro día.",
       ),
     );
+  });
+
+  it("from the waiting list: preloads the pet, offers only full groom and approves the entry", async () => {
+    approve.mockResolvedValue({ appointment: { id: "new" }, staleReason: null });
+    const hook = renderHook(
+      () => useAppointmentForm({ presetPetId: LUNA.id, waitingEntryId: "wl-1", onClose: vi.fn() }),
+      { wrapper },
+    );
+    const { result } = hook;
+
+    await waitFor(() => expect(result.current.fromWaitingList).toBe(true));
+    expect(result.current.serviceOptions.map((o) => o.label)).toEqual(["Grooming completo"]);
+    act(() => {
+      result.current.register("date").onChange({ target: { value: "2026-12-10", name: "date" } });
+      result.current
+        .register("startTime")
+        .onChange({ target: { value: "09:00", name: "startTime" } });
+    });
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as unknown as React.FormEvent);
+    });
+
+    await waitFor(() => expect(approve).toHaveBeenCalled());
+    expect(approve.mock.calls[0]).toEqual([
+      "wl-1",
+      { date: "2026-12-10", startTime: "09:00", durationMinutes: 90 },
+    ]);
+    expect(create).not.toHaveBeenCalled();
   });
 });

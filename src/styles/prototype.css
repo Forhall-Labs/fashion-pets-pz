@@ -709,6 +709,88 @@ textarea {
 .today-panel-list li:hover {
   background: rgba(217, 113, 60, 0.16);
 }
+/* Columna lateral de la Agenda: "Citas de hoy" + "Lista de espera". */
+.agenda-side {
+  flex-shrink: 0;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.agenda-side .today-panel {
+  width: 100%;
+}
+.waiting-panel-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+.waiting-size-chip {
+  font-size: var(--text-small);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: rgba(110, 143, 118, 0.14);
+  color: var(--color-secondary-hover);
+}
+.waiting-size-chip.is-empty {
+  opacity: 0.55;
+}
+.waiting-panel-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.waiting-panel-list li {
+  cursor: default;
+  flex-direction: column;
+  align-items: stretch;
+  border-left-color: var(--color-secondary);
+  background: rgba(110, 143, 118, 0.08);
+}
+.waiting-panel-list li:hover {
+  background: rgba(110, 143, 118, 0.14);
+}
+.waiting-panel-list li.is-stale {
+  border-left-color: var(--color-danger);
+  background: rgba(184, 64, 47, 0.06);
+}
+.waiting-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+.waiting-panel-owner {
+  color: var(--color-text-secondary);
+}
+.waiting-bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  overflow: hidden;
+}
+.waiting-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-secondary);
+}
+.waiting-panel-stale {
+  color: var(--color-danger);
+}
+.waiting-panel-action {
+  align-self: flex-start;
+  padding-left: 0;
+}
+@media (max-width: 900px) {
+  .agenda-with-today-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .agenda-side {
+    width: 100%;
+  }
+}
+
 .today-panel-list li.is-cancelled {
   border-left-color: var(--color-danger);
   background: rgba(184, 64, 47, 0.06);
