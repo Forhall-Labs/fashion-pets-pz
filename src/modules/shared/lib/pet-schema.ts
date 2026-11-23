@@ -20,7 +20,7 @@ export const petFormSchema = z
   .superRefine((v, ctx) => {
     if (v.hasOwnLocation && !v.point && !v.locationAddress) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["point"],
         message: "Marcá el punto en el mapa o escribí una dirección.",
       });
