@@ -50,7 +50,9 @@ describe("hoursFormSchema (HU-4.3 @validation)", () => {
 describe("blackoutFormSchema (HU-4.1 @validation)", () => {
   function blackoutErrors(startDate: string, endDate: string) {
     const result = blackoutFormSchema.safeParse({ startDate, endDate, label: "" });
-    return result.success ? [] : result.error.issues.map((i) => `${i.path[0]}: ${i.message}`);
+    return result.success
+      ? []
+      : result.error.issues.map((i) => `${String(i.path[0])}: ${i.message}`);
   }
 
   it("accepts a single-day range", () => {

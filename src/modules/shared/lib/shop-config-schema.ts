@@ -21,7 +21,7 @@ export const capacityFormSchema = z.object({
     .superRefine((value, ctx) => {
       const issue =
         value === "" ? "Ingresá el máximo de mascotas por día." : positiveIntegerIssue(value);
-      if (issue) ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
+      if (issue) ctx.addIssue({ code: "custom", message: issue });
     }),
 });
 
