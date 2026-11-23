@@ -8,13 +8,20 @@ interface ErrorModalProps {
   title?: string;
   message: string;
   onClose: () => void;
+  /** Texto del botón principal, que también cierra el modal. */
+  actionLabel?: string;
 }
 
 // Modal genérico para errores bloqueantes (login, llamadas a la API, etc.) —
 // reusa Modal en vez de un mensaje inline por pantalla. Todo centrado
 // (ícono, título, texto, botón) en vez del layout título-izq/cerrar-der
 // de ModalHeader, que acá no aplica.
-export function ErrorModal({ title = "Ups...", message, onClose }: ErrorModalProps) {
+export function ErrorModal({
+  title = "Ups...",
+  message,
+  onClose,
+  actionLabel = "Entendido",
+}: ErrorModalProps) {
   return (
     <Modal onClose={onClose}>
       <div style={{ position: "relative", textAlign: "center" }}>
@@ -36,7 +43,7 @@ export function ErrorModal({ title = "Ups...", message, onClose }: ErrorModalPro
       </p>
       <div className="modal-actions" style={{ justifyContent: "center" }}>
         <button className="btn btn-primary" onClick={onClose}>
-          Entendido
+          {actionLabel}
         </button>
       </div>
     </Modal>
