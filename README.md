@@ -33,9 +33,12 @@ Abrí [http://localhost:3000](http://localhost:3000).
 
 ## CI/CD
 
-Cada Pull Request corre `format:check`, `spell`, `lint` y `build` vía GitHub
-Actions (`.github/workflows/ci.yml`). El deploy a producción en Vercel
-(`.github/workflows/deploy.yml`) se dispara solo si esa CI pasó en `main`.
+Tres ramas, tres ambientes en Vercel: `dev` → `dev`, `stage` → `stage` (QA),
+`main` → producción. Cada Pull Request corre `format:check`, `spell`, `lint`
+y `build` vía GitHub Actions; cada push a esas ramas, si los checks pasan,
+además dispara el deploy al ambiente correspondiente
+(`.github/workflows/ci-cd.yml`). Ver `CONTRIBUTING.md` para el flujo
+completo.
 
 ## Documentación del proyecto
 

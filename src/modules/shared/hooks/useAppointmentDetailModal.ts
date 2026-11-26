@@ -1,0 +1,106 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
+import { appointmentsApi } from "../lib/appointments-api";
+import { petsApi } from "../lib/pets-api";
+import { ownersApi } from "../lib/owners-api";
+import { ApiError } from "../lib/api-client";
+import { closedDayMessage, DEFAULT_OPEN_WEEKDAYS, isOpenDayISO } from "../lib/open-days";
+import { serviceNameOf } from "../lib/service-catalog";
+import { shopConfigApi } from "../lib/shop-config-api";
+import { whatsAppForAppointment } from "../lib/whatsapp";
+import { useServices } from "./useServices";
+
+function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
+// Puerto de openAppointmentDetail(), ahora contra la API real: 3 queries
+// encadenadas (cita -> mascota -> dueño), cada una independiente — así un
+// fallo puntual en una sección (p.ej. el dueño) no tira abajo el resto del
+// panel, y una entidad borrada (404 en cualquiera de las tres) se distingue
+// de un error de red genérico (HU-2.2 @validation/@error).
+export function useAppointmentDetailModal(appointmentId: string, onClose: () => void) {
+  const router = useRouter();
+
+  const apptQuery = useQuery({
+    queryKey: ["appointments", "detail", appointmentId],
+    queryFn: () => appointmentsApi.get(appointmentId),
+    retry: (failureCount, err) => !isNotFound(err) && failureCount < 2,
+  });
+
+  const petId = apptQuery.data?.petId;
+  const petQuery = useQuery({
+    queryKey: ["pets", "detail", petId],
+    queryFn: () => petsApi.get(petId!),
+    enabled: !!petId,
+    retry: (failureCount, err) => !isNotFound(err) && failureCount < 2,
+  });
+
+  const ownerId = petQuery.data?.ownerId;
+  const ownerQuery = useQuery({
+    queryKey: ["owners", "detail", ownerId],
+    queryFn: () => ownersApi.get(ownerId!),
+    enabled: !!ownerId,
+    retry: (failureCount, err) => !isNotFound(err) && failureCount < 2,
+  });
+
+  const appt = apptQuery.data ?? null;
+  const pet = petQuery.data ?? null;
+  const owner = ownerQuery.data ?? null;
+
+  const loc = pet
+    ? pet.lat != null && pet.lng != null
+      ? { address: pet.locationAddress || "Punto marcado en el mapa", has: true }
+      : owner && owner.lat != null && owner.lng != null
+        ? { address: owner.address || "Punto marcado en el mapa", has: true }
+        : { address: null, has: false }
+    : null;
+
+  const { servicesById } = useServices();
+  const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
+  const openWeekdays = shopConfigQuery.data?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS;
+  // Una cita activa que quedó en un día que no se atiende (p. ej. una manual
+  // en domingo de antes de la regla): se avisa para reprogramarla a mano.
+  const closedDayWarning =
+    appt && appt.status === "scheduled" && !isOpenDayISO(appt.date, openWeekdays)
+      ? `${closedDayMessage(appt.date).replace(" Elegí otro día.", "")} Reprogramá esta cita.`
+      : null;
+  const serviceName = appt ? serviceNameOf(appt, servicesById) : "";
+  const whatsApp = appt && pet && owner ? whatsAppForAppointment({ ...appt, pet }, owner) : null;
+
+  function goToOwner() {
+    if (!owner) return;
+    onClose();
+    router.push(`/owners/${owner.id}`);
+  }
+
+  return {
+    // Incluye petQuery a propósito: apptQuery resuelve primero y rapidísimo,
+    // dejando un instante donde apptQuery.isLoading ya es false pero
+    // petQuery todavía ni arrancó su fetch (pet sigue null) — sin esto, ese
+    // instante caía en la rama de error ("no se pudo cargar la cita") antes
+    // de que petQuery llegara a resolver, un falso negativo, no una falla
+    // real. ownerQuery se deja afuera a propósito: su carga/error es
+    // independiente (ver ownerSectionError) y no debe tapar el resto del panel.
+    loading: apptQuery.isLoading || (!!petId && petQuery.isLoading),
+    // La cita, o la mascota que referencia, ya no existen — el panel entero
+    // no tiene nada sensato que mostrar (todo el resto de la UI depende de
+    // ambas), a diferencia del dueño (ver ownerSectionError abajo).
+    notFound: isNotFound(apptQuery.error) || (!!petId && isNotFound(petQuery.error)),
+    loadError:
+      (!!apptQuery.error && !isNotFound(apptQuery.error)) ||
+      (!!petQuery.error && !isNotFound(petQuery.error)),
+    appt,
+    pet,
+    owner,
+    ownerSectionError: !!ownerId && (!!ownerQuery.error || isNotFound(ownerQuery.error)),
+    loc,
+    serviceName,
+    closedDayWarning,
+    whatsApp,
+    goToOwner,
+  };
+}

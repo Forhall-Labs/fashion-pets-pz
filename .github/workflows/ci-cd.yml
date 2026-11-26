@@ -1,0 +1,123 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [dev, stage, main]
+  push:
+    branches: [dev, stage, main]
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Format, spell, lint & build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Spell check
+        run: npm run spell
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build (includes type-check)
+        run: npm run build
+        env:
+          # Solo para que el build no falle al evaluar createClient() en
+          # tiempo de build (prerender de páginas que importan el shell) —
+          # este job no habla con Supabase de verdad. El deploy real usa las
+          # env vars reales configuradas en el proyecto de Vercel.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+
+  deploy:
+    name: Deploy
+    needs: checks
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve Vercel target from branch
+        id: target
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "target=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=preview" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Consolidating environment variables inside steps ensures clean string evaluation
+      - name: Check Vercel secrets are configured
+        id: secrets_check
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "::warning::One or more Vercel secrets are missing — skipping deploy."
+            echo "missing=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "missing=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Vercel CLI
+        if: steps.secrets_check.outputs.missing == '0'
+        run: npm install --global vercel@latest
+
+      # FIXED: Added the --git-branch flag for pulling variables safely
+      - name: Pull Vercel project settings
+        if: steps.secrets_check.outputs.missing == '0'
+        run: >
+          vercel pull --yes 
+          --environment=${{ steps.target.outputs.target }} 
+          --git-branch=${{ github.ref_name }}
+          --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build with Vercel
+        if: steps.secrets_check.outputs.missing == '0'
+        run: >
+          vercel build 
+          --target=${{ steps.target.outputs.target }} 
+          --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy prebuilt output
+        id: deploy
+        if: steps.secrets_check.outputs.missing == '0'
+        run: |
+          url=$(vercel deploy --prebuilt --target=${{ steps.target.outputs.target }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Summary
+        if: steps.secrets_check.outputs.missing == '0'
+        run: |
+          echo "### Deployed to \`${{ steps.target.outputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

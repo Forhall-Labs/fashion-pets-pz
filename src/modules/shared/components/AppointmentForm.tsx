@@ -1,0 +1,159 @@
+"use client";
+
+import { ErrorModal } from "./ErrorModal";
+import { Modal, ModalHeader } from "./Modal";
+import { PawPrintsSpinner } from "./PawPrintsSpinner";
+import type { Appointment } from "../types";
+import { useAppointmentForm } from "../hooks/useAppointmentForm";
+
+interface AppointmentFormProps {
+  appointment?: Appointment | null;
+  presetDate?: string;
+  presetPetId?: string;
+  /** Viene del panel de lista de espera: al guardar se aprueba esa entrada. */
+  waitingEntryId?: string;
+  onSaved?: (appt: Appointment) => void;
+  onClose: () => void;
+}
+
+// Puerto de openAppointmentForm() (docs/prototype/app.js:517-599) contra la
+// API real — crea o edita una cita, con autocompletado de duración según la
+// mascota o el tipo de servicio.
+export function AppointmentForm({
+  appointment = null,
+  presetDate,
+  presetPetId,
+  waitingEntryId,
+  onSaved,
+  onClose,
+}: AppointmentFormProps) {
+  const {
+    editing,
+    register,
+    registerDuration,
+    errors,
+    petOptions,
+    petsLoading,
+    petId,
+    service,
+    serviceOptions,
+    noCatalogServices,
+    fromWaitingList,
+    handlePetChange,
+    handleServiceChange,
+    hoursError,
+    closedDayError,
+    dayDeviationWarning,
+    submitting,
+    error,
+    clearError,
+    handleSubmit,
+  } = useAppointmentForm({
+    appointment,
+    presetDate,
+    presetPetId,
+    waitingEntryId,
+    onSaved,
+    onClose,
+  });
+
+  return (
+    <>
+      <Modal onClose={onClose}>
+        <ModalHeader
+          title={
+            editing
+              ? "Editar / reprogramar cita"
+              : fromWaitingList
+                ? "Agendar desde lista de espera"
+                : "Nueva cita"
+          }
+          onClose={onClose}
+        />
+        {fromWaitingList ? (
+          <p className="text-small" style={{ marginTop: 0 }}>
+            Al guardar, la mascota sale de la lista de espera.
+          </p>
+        ) : null}
+        <form onSubmit={handleSubmit}>
+          <div className={`field ${errors.petId ? "has-error" : ""}`}>
+            <label htmlFor="af-pet">Mascota</label>
+            <select
+              id="af-pet"
+              value={petId}
+              onChange={(e) => handlePetChange(e.target.value)}
+              disabled={petsLoading || fromWaitingList}
+            >
+              <option value="">Seleccioná una mascota…</option>
+              {petOptions.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <span className="error-msg">{errors.petId?.message}</span>
+          </div>
+
+          <div className={`field ${errors.service ? "has-error" : ""}`}>
+            <label htmlFor="af-service">Servicio</label>
+            <select
+              id="af-service"
+              value={service}
+              onChange={(e) => handleServiceChange(e.target.value)}
+            >
+              {service === "" ? <option value="">Elegí un servicio…</option> : null}
+              {serviceOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {noCatalogServices ? (
+              <span className="hint">Agregá más servicios en Configuración → Servicios.</span>
+            ) : null}
+            <span className="error-msg">{errors.service?.message}</span>
+          </div>
+
+          <div className="field-row">
+            <div
+              className={`field ${errors.date || closedDayError ? "has-error" : dayDeviationWarning ? "has-warning" : ""}`}
+            >
+              <label htmlFor="af-date">Fecha</label>
+              <input type="date" id="af-date" {...register("date")} />
+              {errors.date?.message || closedDayError ? (
+                <span className="error-msg">{errors.date?.message ?? closedDayError}</span>
+              ) : dayDeviationWarning ? (
+                <span className="hint-warning">{dayDeviationWarning}</span>
+              ) : null}
+            </div>
+            <div className={`field ${errors.startTime || hoursError ? "has-error" : ""}`}>
+              <label htmlFor="af-time">Horario</label>
+              <input type="time" id="af-time" {...register("startTime")} />
+              <span className="error-msg">{errors.startTime?.message ?? hoursError}</span>
+            </div>
+            <div className={`field ${errors.durationMinutes ? "has-error" : ""}`}>
+              <label htmlFor="af-duration">Duración (min)</label>
+              <input type="number" id="af-duration" min={1} {...registerDuration} />
+              <span className="error-msg">{errors.durationMinutes?.message}</span>
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className={`btn btn-primary ${submitting ? "btn-loading" : ""}`}
+              disabled={submitting || !!hoursError || !!closedDayError}
+              title={closedDayError ?? hoursError ?? undefined}
+            >
+              {submitting ? <PawPrintsSpinner /> : "Guardar"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      {error && <ErrorModal title="No se pudo guardar" message={error} onClose={clearError} />}
+    </>
+  );
+}

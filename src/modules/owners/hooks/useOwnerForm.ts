@@ -1,0 +1,162 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { digitsOnly } from "@/modules/shared/lib/date-utils";
+import { translateApiError } from "@/modules/shared/lib/api-errors";
+import { pointChange, toMapPoint, type MapPoint } from "@/modules/shared/lib/map-point";
+import { ownerFormSchema, type OwnerFormValues } from "@/modules/shared/lib/owner-schema";
+import { ownersApi, type OwnerInput } from "@/modules/shared/lib/owners-api";
+import { DAY_OPTIONS } from "@/modules/shared/lib/labels";
+import { DEFAULT_OPEN_WEEKDAYS } from "@/modules/shared/lib/open-days";
+import { shopConfigApi } from "@/modules/shared/lib/shop-config-api";
+import type { Owner, Weekday } from "@/modules/shared/types";
+
+type Conflict =
+  | { type: "duplicate"; existing: Owner }
+  | { type: "shared-phone"; existing: Owner }
+  | { type: "same-name"; existing: Owner }
+  | null;
+
+interface UseOwnerFormArgs {
+  owner?: Owner | null;
+  // Dueños ya cargados en pantalla (la página actual de la lista, o el
+  // resultado de una búsqueda) — el chequeo de duplicados es un aviso
+  // best-effort contra lo que ya está en memoria, no una consulta global
+  // (no hay constraint del lado del servidor tampoco, así que "guardar de
+  // todos modos" siempre está disponible como escape).
+  existingOwners: Owner[];
+  onSaved?: (owner: Owner) => void;
+  onClose: () => void;
+}
+
+export function useOwnerForm({ owner = null, existingOwners, onSaved, onClose }: UseOwnerFormArgs) {
+  const editing = owner != null;
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const shopConfigQuery = useQuery({ queryKey: ["shop-config"], queryFn: shopConfigApi.get });
+  const openWeekdays = shopConfigQuery.data?.openWeekdays ?? DEFAULT_OPEN_WEEKDAYS;
+  // Solo días en que se atiende. Si el dueño ya tenía uno que después se
+  // cerró, se sigue mostrando para no perderlo sin aviso.
+  const dayOptions = DAY_OPTIONS.filter(
+    (d) => openWeekdays.includes(d) || d === owner?.fixedVisitDay,
+  );
+  // Estable durante toda la sesión de este form (una key nueva por
+  // apertura, no por cada intento de submit) — así un reintento manual
+  // después de un timeout/confirmación perdida no crea un dueño duplicado.
+  const idempotencyKey = useRef(crypto.randomUUID()).current;
+  const initialPoint = owner ? toMapPoint(owner) : null;
+
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<OwnerFormValues>({
+    resolver: zodResolver(ownerFormSchema),
+    defaultValues: {
+      name: owner?.name ?? "",
+      phone: owner?.phone ?? "",
+      address: owner?.address ?? "",
+      point: initialPoint,
+      fixedVisitDay: owner?.fixedVisitDay ?? "",
+    },
+  });
+
+  const [conflict, setConflict] = useState<Conflict>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (input: OwnerInput) =>
+      editing ? ownersApi.update(owner.id, input) : ownersApi.create(input, idempotencyKey),
+    onSuccess: (saved) => {
+      void queryClient.invalidateQueries({ queryKey: ["owners"] });
+      onSaved?.(saved);
+      onClose();
+    },
+    onError: (err: unknown) => setError(translateApiError(err)),
+  });
+
+  function buildInput(values: OwnerFormValues): OwnerInput {
+    return {
+      name: values.name.trim(),
+      phone: values.phone.trim(),
+      address: values.address.trim() || null,
+      addressPoint: pointChange(initialPoint, values.point),
+      fixedVisitDay: (values.fixedVisitDay || null) as Weekday | null,
+    };
+  }
+
+  function onValid(values: OwnerFormValues) {
+    if (!editing) {
+      const phoneDigits = digitsOnly(values.phone);
+      const trimmedName = values.name.trim().toLowerCase();
+      const dup = existingOwners.find(
+        (o) => o.name.trim().toLowerCase() === trimmedName && digitsOnly(o.phone) === phoneDigits,
+      );
+      if (dup) {
+        setConflict({ type: "duplicate", existing: dup });
+        return;
+      }
+      const samePhone = existingOwners.find((o) => digitsOnly(o.phone) === phoneDigits);
+      if (samePhone) {
+        setConflict({ type: "shared-phone", existing: samePhone });
+        return;
+      }
+      // No es una regla de la HU original — pedida explícitamente después:
+      // dos dueños con el mismo nombre (aunque el teléfono sea distinto) no
+      // debería poder pasar sin avisar.
+      const sameName = existingOwners.find((o) => o.name.trim().toLowerCase() === trimmedName);
+      if (sameName) {
+        setConflict({ type: "same-name", existing: sameName });
+        return;
+      }
+    }
+    setError(null);
+    mutation.mutate(buildInput(values));
+  }
+
+  function confirmConflict() {
+    setConflict(null);
+    setError(null);
+    mutation.mutate(buildInput(getValues()));
+  }
+
+  function openExisting(id: string) {
+    onClose();
+    router.push(`/owners/${id}`);
+  }
+
+  // El mapa arranca abierto si el dueño ya tiene coordenadas.
+  const [showMap, setShowMap] = useState(initialPoint != null);
+
+  function setPoint(point: MapPoint | null) {
+    setValue("point", point);
+  }
+
+  return {
+    editing,
+    register,
+    errors,
+    setValue,
+    dayOptions,
+    point: watch("point"),
+    setPoint,
+    showMap,
+    openMap: () => setShowMap(true),
+    submitting: mutation.isPending,
+    error,
+    clearError: () => setError(null),
+    conflict,
+    cancelConflict: () => setConflict(null),
+    confirmConflict,
+    openExisting,
+    handleSubmit: handleSubmit(onValid),
+  };
+}

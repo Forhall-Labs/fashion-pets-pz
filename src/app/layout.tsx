@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 
+import { QueryProvider } from "@/modules/shared/components/QueryProvider";
+import { UnhandledErrorModal } from "@/modules/shared/components/UnhandledErrorModal";
+
 import "./globals.css";
 import "@/styles/prototype.css";
 
@@ -25,7 +28,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${poppins.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <QueryProvider>
+          {children}
+          <UnhandledErrorModal />
+        </QueryProvider>
+      </body>
     </html>
   );
 }

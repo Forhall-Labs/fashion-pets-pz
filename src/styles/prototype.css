@@ -7,16 +7,19 @@
 :root {
   --color-primary: #d9713c;
   --color-primary-dark: #b65c2c;
+  --color-primary-hover: #9c4a1f;
   --color-secondary: #6e8f76;
   --color-secondary-dark: #58735f;
+  --color-secondary-hover: #465e4d;
   --color-accent: #e3a93b;
   --color-accent-dark: #c58f2a;
+  --color-accent-text: #8a6218;
   --color-danger: #b8402f;
   --color-danger-dark: #96311f;
   --color-neutral-900: #2b2622;
   --color-neutral-50: #faf5ef;
   --color-border: #e4dcd1;
-  --color-text-secondary: #8a8177;
+  --color-text-secondary: #756c61;
   --color-surface: #ffffff;
 
   --font-display: var(--font-poppins), "Poppins", sans-serif;
@@ -156,7 +159,7 @@ textarea {
   color: var(--color-neutral-900);
 }
 .nav-link.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .mobile-nav-toggle {
@@ -189,18 +192,18 @@ textarea {
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-hover);
 }
 .btn-secondary {
-  background: var(--color-secondary);
+  background: var(--color-secondary-dark);
   color: #fff;
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-secondary-dark);
+  background: var(--color-secondary-hover);
 }
 .btn-destructive {
   background: var(--color-danger);
@@ -219,7 +222,7 @@ textarea {
 }
 .btn-text {
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   padding: var(--space-1) var(--space-2);
 }
 .btn-text:hover:not(:disabled) {
@@ -231,11 +234,49 @@ textarea {
 }
 .btn-icon {
   padding: var(--space-2);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
 }
 .btn-block {
   width: 100%;
+}
+.btn-loading {
+  pointer-events: none;
+}
+
+/* ===================== MAP PICKER ===================== */
+.map-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.map-picker-canvas {
+  height: 240px;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  z-index: 0;
+}
+.map-picker-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  background: var(--color-neutral-50);
+  font-size: var(--text-small);
+}
+.map-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.map-picker .error-msg,
+.field .map-picker .error-msg {
+  display: block;
+  color: var(--color-danger);
+  font-size: var(--text-small);
 }
 
 /* ===================== FIELDS ===================== */
@@ -268,7 +309,7 @@ textarea {
 .field textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.15);
+  box-shadow: 0 0 0 3px rgba(217, 113, 60, 0.3);
 }
 .field input:disabled,
 .field select:disabled {
@@ -279,6 +320,32 @@ textarea {
 .field.has-error select {
   border-color: var(--color-danger);
 }
+.password-field {
+  position: relative;
+  display: flex;
+}
+.password-field input {
+  width: 100%;
+  padding-right: 48px;
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-secondary);
+}
+.password-toggle:hover {
+  color: var(--color-neutral-900);
+}
 .field .error-msg {
   font-size: var(--text-small);
   color: var(--color-danger);
@@ -286,6 +353,17 @@ textarea {
 }
 .field.has-error .error-msg {
   display: block;
+}
+/* Aviso no bloqueante (ej. desvío del día fijo) — mismo color que
+   badge-exception, distinto de has-error a propósito: esto no impide
+   guardar, solo informa que el backend lo va a marcar como excepción. */
+.field.has-warning input,
+.field.has-warning select {
+  border-color: var(--color-accent-dark);
+}
+.field .hint-warning {
+  font-size: var(--text-small);
+  color: var(--color-accent-text);
 }
 .field-row {
   display: flex;
@@ -367,6 +445,19 @@ textarea {
   margin-top: var(--space-3);
 }
 
+/* ===================== 404 ===================== */
+.not-found-card {
+  text-align: center;
+}
+.not-found-code {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-primary);
+  margin-top: var(--space-2);
+}
+
 /* ===================== BADGES ===================== */
 .badge {
   display: inline-flex;
@@ -389,11 +480,11 @@ textarea {
 }
 .badge-status-scheduled {
   background: rgba(217, 113, 60, 0.12);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-hover);
 }
 .badge-status-completed {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-status-cancelled {
   background: rgba(184, 64, 47, 0.1);
@@ -402,7 +493,7 @@ textarea {
 }
 .badge-suggested {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
 }
 .badge-aggressive {
   background: rgba(184, 64, 47, 0.12);
@@ -410,7 +501,7 @@ textarea {
 }
 .badge-pickup {
   background: rgba(110, 143, 118, 0.15);
-  color: var(--color-secondary-dark);
+  color: var(--color-secondary-hover);
 }
 .badge-incomplete {
   background: rgba(184, 64, 47, 0.1);
@@ -418,7 +509,7 @@ textarea {
 }
 .badge-exception {
   background: rgba(227, 169, 59, 0.18);
-  color: var(--color-accent-dark);
+  color: var(--color-accent-text);
   border: 1px dashed var(--color-accent-dark);
 }
 
@@ -453,9 +544,13 @@ textarea {
   margin-bottom: var(--space-4);
 }
 .modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
-  font-size: 1.25rem;
   color: var(--color-text-secondary);
 }
 .modal-actions {
@@ -468,6 +563,21 @@ textarea {
 .modal-body-text {
   color: var(--color-neutral-900);
   margin-bottom: var(--space-4);
+}
+.error-modal-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+
+/* ===================== WALKING DOG LOADER ===================== */
+.walking-dog-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) 0;
+  color: var(--color-text-secondary);
 }
 
 /* ===================== DATA TABLE / LIST ===================== */
@@ -513,8 +623,8 @@ textarea {
   border-radius: var(--radius-md);
 }
 .empty-state-icon {
-  font-size: 2rem;
-  display: block;
+  display: flex;
+  justify-content: center;
   margin-bottom: var(--space-2);
 }
 
@@ -544,7 +654,7 @@ textarea {
   color: var(--color-text-secondary);
 }
 .view-tab.is-active {
-  background: var(--color-primary);
+  background: var(--color-primary-dark);
   color: #fff;
 }
 .agenda-nav {
@@ -564,6 +674,171 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+.agenda-with-today-panel {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.agenda-with-today-panel .calendar-root {
+  flex: 1;
+  min-width: 0;
+}
+.today-panel {
+  flex-shrink: 0;
+  width: 260px;
+}
+.today-panel-toggle {
+  width: 100%;
+  margin-bottom: var(--space-2);
+}
+.today-panel-body {
+  padding: var(--space-3);
+}
+.today-panel-body h3 {
+  margin: 0 0 var(--space-2);
+}
+.today-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.today-panel-list li {
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-small);
+  border-left: 3px solid var(--color-primary);
+  background: rgba(217, 113, 60, 0.08);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.today-panel-list li:hover {
+  background: rgba(217, 113, 60, 0.16);
+}
+/* Columna lateral de la Agenda: "Citas de hoy" + "Lista de espera". */
+.agenda-side {
+  flex-shrink: 0;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.agenda-side .today-panel {
+  width: 100%;
+}
+.waiting-panel-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+.waiting-size-chip {
+  font-size: var(--text-small);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: rgba(110, 143, 118, 0.14);
+  color: var(--color-secondary-hover);
+}
+.waiting-size-chip.is-empty {
+  opacity: 0.55;
+}
+.waiting-panel-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.waiting-panel-list li {
+  cursor: default;
+  flex-direction: column;
+  align-items: stretch;
+  border-left-color: var(--color-secondary);
+  background: rgba(110, 143, 118, 0.08);
+}
+.waiting-panel-list li:hover {
+  background: rgba(110, 143, 118, 0.14);
+}
+.waiting-panel-list li.is-stale {
+  border-left-color: var(--color-danger);
+  background: rgba(184, 64, 47, 0.06);
+}
+.waiting-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+.waiting-panel-owner {
+  color: var(--color-text-secondary);
+}
+.waiting-bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  overflow: hidden;
+}
+.waiting-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-secondary);
+}
+.waiting-panel-stale {
+  color: var(--color-danger);
+}
+.waiting-panel-stale-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+.waiting-panel-cleanup {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+.waiting-panel-confirm {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: rgba(184, 64, 47, 0.06);
+}
+.waiting-panel-confirm p {
+  margin: 0 0 var(--space-2);
+}
+.waiting-panel-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.waiting-panel-action {
+  align-self: flex-start;
+  padding-left: 0;
+}
+@media (max-width: 900px) {
+  .agenda-with-today-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .agenda-side {
+    width: 100%;
+  }
+}
+
+.today-panel-list li.is-cancelled {
+  border-left-color: var(--color-danger);
+  background: rgba(184, 64, 47, 0.06);
+  opacity: 0.75;
+}
+.today-panel-list .appt-time {
+  font-weight: 700;
+}
+.today-panel-list .badge {
+  margin-left: auto;
 }
 
 /* Day / Week grid */
@@ -671,6 +946,7 @@ textarea {
   gap: 2px;
 }
 .cal-year-mini-day {
+  position: relative;
   font-size: 9px;
   text-align: center;
   height: 16px;
@@ -679,6 +955,7 @@ textarea {
   justify-content: center;
   border-radius: 3px;
   color: var(--color-text-secondary);
+  cursor: pointer;
 }
 .cal-year-mini-day.has-appt {
   background: var(--color-primary);
@@ -687,6 +964,20 @@ textarea {
 }
 .cal-year-mini-day.is-blackout {
   background: #ece0d3;
+}
+.cal-year-mini-day-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 10px;
+  height: 10px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--color-neutral-900);
+  color: #fff;
+  font-size: 7px;
+  line-height: 10px;
+  font-weight: 700;
 }
 
 /* Appointment tile */
@@ -720,6 +1011,113 @@ textarea {
 .appt-tile .appt-time {
   font-weight: 700;
   margin-right: 3px;
+}
+
+/* react-big-calendar (Día/Semana/Mes) trae su propio CSS genérico — estas
+   reglas lo reemplazan para que se vea consistente con el resto de la app
+   (mismos tokens que las reglas cal-month y appt-tile de arriba, que siguen
+   siendo lo que usa la vista Año). Selectores compuestos (.rbc-event.appt-tile,
+   no .rbc-event solo) a propósito: ganan por especificidad sin depender de en
+   qué orden Next.js termine cargando esta hoja vs. react-big-calendar.css. */
+.rbc-calendar {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--color-neutral-900);
+}
+.rbc-off-range-bg {
+  background: var(--color-neutral-50);
+}
+.rbc-off-range {
+  color: var(--color-text-secondary);
+}
+.rbc-today {
+  background: transparent;
+}
+.rbc-header {
+  padding: var(--space-2);
+  font-size: var(--text-small);
+  font-weight: 600;
+  background: var(--color-neutral-50);
+  border-color: var(--color-border);
+  text-transform: capitalize;
+}
+.rbc-month-view,
+.rbc-time-view,
+.rbc-time-header.rbc-overflowing {
+  border-color: var(--color-border);
+}
+.rbc-day-bg + .rbc-day-bg,
+.rbc-month-row + .rbc-month-row,
+.rbc-header + .rbc-header,
+.rbc-time-content,
+.rbc-time-content > * + * > *,
+.rbc-timeslot-group,
+.rbc-time-header-content {
+  border-color: var(--color-border);
+}
+.rbc-date-cell {
+  padding: var(--space-2) var(--space-2) 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-align: right;
+}
+.rbc-date-cell.rbc-now .rbc-button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+}
+.rbc-time-gutter .rbc-timeslot-group {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+.rbc-current-time-indicator {
+  background: var(--color-primary);
+}
+.rbc-show-more {
+  font-size: var(--text-micro);
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.rbc-event.appt-tile {
+  background: rgba(217, 113, 60, 0.14);
+  border: none;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-neutral-900);
+  padding: 2px 6px;
+  font-size: var(--text-micro);
+  box-shadow: none;
+}
+.rbc-event.appt-tile:hover,
+.rbc-event.appt-tile:focus {
+  background: rgba(217, 113, 60, 0.22);
+  outline: none;
+}
+.rbc-event.appt-tile.is-quick {
+  border-left-color: var(--color-secondary);
+  background: rgba(110, 143, 118, 0.14);
+}
+.rbc-event.appt-tile.is-auto {
+  border-left-style: dashed;
+}
+.rbc-event.appt-tile.is-exception {
+  border-left-color: var(--color-danger);
+  border-left-style: dotted;
+}
+.rbc-event.appt-tile .appt-time {
+  font-weight: 700;
+  margin-right: 3px;
+}
+/* Blackout en Día/Semana/Mes (dayPropGetter en RbcCalendar.tsx agrega esta
+   clase) — mismo rayado que .cal-cell.is-blackout usaba en el grid viejo y
+   que .cal-year-mini-day.is-blackout sigue usando en la vista Año. */
+.rbc-day-bg.is-blackout {
+  background: repeating-linear-gradient(45deg, #f2e9e0, #f2e9e0 6px, #ece0d3 6px, #ece0d3 12px);
 }
 
 /* ===================== RECOMMENDATION CARD ===================== */
@@ -872,13 +1270,15 @@ textarea {
   }
   .mobile-nav-toggle {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     background: none;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    font-size: 1.1rem;
-    padding: 6px 10px;
     position: fixed;
-    top: 10px;
+    top: 8px;
     right: var(--space-4);
     z-index: 25;
   }

@@ -6,6 +6,7 @@ export type PetSize = "small" | "medium" | "extra_large";
 
 export type GroomingFrequency = "twice_a_month" | "once_a_month" | "once_every_two_months";
 
+// "quick_service" = servicio del catálogo (Épica 8): la cita trae `serviceId`.
 export type ServiceType = "full_groom" | "quick_service";
 
 export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
@@ -49,9 +50,20 @@ export interface Appointment {
   startTime: string; // HH:MM
   durationMinutes: number;
   serviceType: ServiceType;
+  serviceId: string | null;
   status: AppointmentStatus;
   source: AppointmentSource;
   flaggedReason: string | null;
+}
+
+/** Servicio del catálogo (Épica 8), con una duración sugerida por tamaño. */
+export interface Service {
+  id: string;
+  name: string;
+  durationSmallMinutes: number;
+  durationMediumMinutes: number;
+  durationExtraLargeMinutes: number;
+  active: boolean;
 }
 
 export interface WaitingListEntry {
@@ -73,7 +85,8 @@ export interface BlackoutPeriod {
 
 export interface ShopConfig {
   maxPetsPerDay: number;
-  quickServiceDurationMinutes: number | null;
+  /** Días de la semana que se atiende (por defecto lunes a sábado). */
+  openWeekdays: Weekday[];
   openTime: string;
   closeTime: string;
 }

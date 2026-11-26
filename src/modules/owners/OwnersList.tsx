@@ -1,27 +1,26 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Link from "next/link";
 
-import { DAY_LABEL } from "@/modules/shared/labels";
-import { mockData } from "@/modules/shared/mock-data";
-import { petsOfOwner } from "@/modules/shared/selectors";
+import { DAY_LABEL } from "@/modules/shared/lib/labels";
+import { SearchIcon } from "@/modules/shared/components/SearchIcon";
+import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
+import { WarningIcon } from "@/modules/shared/components/WarningIcon";
+
+import { OwnerForm } from "./OwnerForm";
+import { useOwnersList } from "./hooks/useOwnersList";
 
 // Puerto de la pantalla "Dueños — Lista" (renderOwnersList() en app.js).
-// Crear dueño (modal) queda para la próxima etapa.
 export function OwnersList() {
-  const [query, setQuery] = useState("");
-
-  const q = query.trim().toLowerCase();
-  const owners = mockData.owners.filter(
-    (o) => !q || o.name.toLowerCase().includes(q) || o.phone.includes(q),
-  );
+  const { query, setQuery, owners, page, setPage, totalPages, loading, error } = useOwnersList();
+  const [creating, setCreating] = useState(false);
 
   return (
     <section className="screen" data-screen="owners">
       <div className="screen-header">
         <h1 className="text-h1">Dueños</h1>
-        <button className="btn btn-primary" disabled title="Próximamente">
+        <button className="btn btn-primary" onClick={() => setCreating(true)}>
           + Nuevo dueño
         </button>
       </div>
@@ -33,33 +32,73 @@ export function OwnersList() {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      <div className="data-table">
-        {owners.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-icon">🔍</span>No se encontraron dueños.
+      {error && (
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <WarningIcon size={32} />
+          </span>
+          {error}
+        </div>
+      )}
+      {!error && loading && owners.length === 0 ? (
+        <WalkingDogLoader />
+      ) : (
+        <>
+          <div className="data-table">
+            {owners.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-state-icon">
+                  <SearchIcon size={32} />
+                </span>
+                No se encontraron dueños.
+              </div>
+            ) : (
+              owners.map((o) => (
+                <Link href={`/owners/${o.id}`} className="data-row" key={o.id}>
+                  <div className="data-row-main">
+                    <strong>{o.name}</strong>
+                    <span className="text-small">{o.phone}</span>
+                  </div>
+                  <div className="data-row-meta">
+                    {o.fixedVisitDay ? (
+                      <span className="badge badge-size">
+                        Día fijo: {DAY_LABEL[o.fixedVisitDay]}
+                      </span>
+                    ) : null}
+                    <span className="text-small">
+                      {o.petCount} mascota{o.petCount === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
-        ) : (
-          owners.map((o) => {
-            const petCount = petsOfOwner(mockData, o.id).length;
-            return (
-              <Link href={`/owners/${o.id}`} className="data-row" key={o.id}>
-                <div className="data-row-main">
-                  <strong>{o.name}</strong>
-                  <span className="text-small">{o.phone}</span>
-                </div>
-                <div className="data-row-meta">
-                  {o.fixedVisitDay ? (
-                    <span className="badge badge-size">Día fijo: {DAY_LABEL[o.fixedVisitDay]}</span>
-                  ) : null}
-                  <span className="text-small">
-                    {petCount} mascota{petCount === 1 ? "" : "s"}
-                  </span>
-                </div>
-              </Link>
-            );
-          })
-        )}
-      </div>
+          {totalPages > 1 && (
+            <div className="modal-actions" style={{ justifyContent: "center", marginTop: 16 }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                ← Anterior
+              </button>
+              <span className="text-small">
+                Página {page} de {totalPages}
+              </span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Siguiente →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      {creating && <OwnerForm existingOwners={owners} onClose={() => setCreating(false)} />}
     </section>
   );
 }

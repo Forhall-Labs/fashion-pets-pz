@@ -1,63 +1,106 @@
 "use client";
 
-import { SizeBadge } from "@/modules/shared/Badge";
-import { formatDateShort } from "@/modules/shared/date-utils";
-import { mockData, TODAY_ISO } from "@/modules/shared/mock-data";
-import { daysBetween, getOwner, getPet } from "@/modules/shared/selectors";
+import { SizeBadge } from "@/modules/shared/components/Badge";
+import { HourglassIcon } from "@/modules/shared/components/HourglassIcon";
+import { WalkingDogLoader } from "@/modules/shared/components/WalkingDogLoader";
+import { SIZE_LABEL } from "@/modules/shared/lib/labels";
+import { waitingDays, waitingRangeLabel } from "@/modules/shared/lib/waiting-list-format";
+import type { PetSize } from "@/modules/shared/types";
 
-// Puerto de la pantalla "Lista de Espera" (renderWaitingList() en app.js).
-// La Recommendation Card (HU-5.2/5.3) aparece cuando se libera un turno —
-// eso depende de poder cancelar/mover citas, que todavía no está wireado
-// acá. "+ Agregar mascota" (modal) queda para la próxima etapa también.
+import { WaitingListForm } from "./WaitingListForm";
+import { useWaitingListView } from "./hooks/useWaitingListView";
+
+// Pantalla "Lista de espera" (Épica 5). La recomendación para un lugar
+// liberado no vive acá: se abre sola al cancelar o mover una cita
+// (<VacatedSlotHost/> en el shell).
 export function WaitingListView() {
-  const active = mockData.waitingList
-    .filter((w) => w.status === "active")
-    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+  const v = useWaitingListView();
 
   return (
     <section className="screen" data-screen="waiting-list">
       <div className="screen-header">
-        <h1 className="text-h1">Lista de espera</h1>
-        <button className="btn btn-primary" disabled title="Próximamente">
+        <h1 className="text-h1">
+          Lista de espera{v.entries.length ? ` (${v.entries.length})` : ""}
+        </h1>
+        <button className="btn btn-primary" onClick={v.openNew}>
           + Agregar mascota
         </button>
       </div>
 
-      {active.length === 0 ? (
+      {v.loading ? (
+        <WalkingDogLoader />
+      ) : v.loadError ? (
+        <div className="empty-state" role="alert">
+          No se pudo cargar la lista de espera.{" "}
+          <button className="btn btn-text btn-sm" onClick={v.reload}>
+            Reintentar
+          </button>
+        </div>
+      ) : v.entries.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon">⏳</span>No hay mascotas en la lista de espera.
+          <span className="empty-state-icon">
+            <HourglassIcon size={32} />
+          </span>
+          No hay mascotas en la lista de espera.
         </div>
       ) : (
         <div className="data-table">
-          <h2 className="text-h2" style={{ marginBottom: 8 }}>
-            Todas las entradas
-          </h2>
-          {active.map((w) => {
-            const pet = getPet(mockData, w.petId)!;
-            const owner = getOwner(mockData, pet.ownerId)!;
-            const days = daysBetween(w.createdAt, TODAY_ISO);
+          {v.entries.map((w) => {
+            const days = waitingDays(w.createdAt);
             return (
               <div className="data-row" key={w.id}>
                 <div className="data-row-main">
-                  <strong>{pet.name}</strong>
-                  <span className="text-small">{owner.name}</span>
+                  <strong>{w.petName}</strong>
+                  <span className="text-small">{w.ownerName}</span>
+                  {w.staleReason ? (
+                    <span className="text-small" style={{ color: "var(--color-danger)" }}>
+                      {w.staleReason}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="data-row-meta">
-                  <SizeBadge size={pet.size} />
+                  {w.size in SIZE_LABEL ? (
+                    <SizeBadge size={w.size as PetSize} />
+                  ) : (
+                    <span className="badge badge-incomplete">Tamaño inválido</span>
+                  )}
                   <span className="text-small">
-                    {w.preferredStartDate
-                      ? `${formatDateShort(w.preferredStartDate)} – ${formatDateShort(w.preferredEndDate!)}`
-                      : "Sin rango preferido"}
+                    {waitingRangeLabel(w.preferredStartDate, w.preferredEndDate)}
                   </span>
                   <span className="text-small">
                     Esperando hace {days} día{days === 1 ? "" : "s"}
                   </span>
+                  <button className="btn btn-text btn-sm" onClick={() => v.openEdit(w)}>
+                    Editar
+                  </button>
+                  <button
+                    className="btn btn-text btn-sm"
+                    onClick={() => v.remove(w.id)}
+                    disabled={v.removingId === w.id}
+                  >
+                    Quitar
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+      {v.removeError ? (
+        <p className="text-small" role="alert" style={{ color: "var(--color-danger)" }}>
+          {v.removeError}
+        </p>
+      ) : null}
+
+      {v.form ? (
+        <WaitingListForm
+          key={v.form.entry?.id ?? "new"}
+          entry={v.form.entry}
+          existing={v.entries}
+          onEditExisting={v.openEdit}
+          onClose={v.closeForm}
+        />
+      ) : null}
     </section>
   );
 }

@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 // by default. Extend connect-src/img-src here as real integrations land:
 //   - Supabase (client + REST):        https://*.supabase.co
 //   - Nominatim geocoding (server-side only, no browser call needed)
+//   - OpenStreetMap tiles for the location picker:  https://tile.openstreetmap.org
 //   - Maps deep links (Waze/Google Maps) and wa.me are top-level navigations,
 //     not fetch/frame targets, so they don't need a CSP entry.
 //
@@ -19,9 +20,14 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://tile.openstreetmap.org",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  // Supabase Auth (signInWithPassword/getSession/signOut — the frontend never
+  // queries tables directly, see src/modules/shared/lib/supabase-client.ts).
+  // localhost:3001 is the NestJS API in local dev. fashion-pets-pz-api.onrender.com
+  // is the Render "develop" service, wired to Vercel Preview via NEXT_PUBLIC_API_URL
+  // for now — swap/add the production Render origin once that service exists.
+  `connect-src 'self' https://*.supabase.co https://fashion-pets-pz-api.onrender.com${isDev ? " http://localhost:3001" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
