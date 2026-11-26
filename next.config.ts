@@ -16,6 +16,18 @@ import type { NextConfig } from "next";
 // Upgrading to a per-request nonce (drops 'unsafe-inline', forces every page
 // to render dynamically) is a reasonable next hardening step, not done here.
 const isDev = process.env.NODE_ENV === "development";
+
+// Solo el origen (protocolo + host + puerto): connect-src no acepta rutas con
+// sentido para esto, y una URL mal escrita no debe romper el build.
+function originOf(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+const apiOrigin = originOf(process.env.NEXT_PUBLIC_API_URL);
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -24,10 +36,10 @@ const csp = [
   "font-src 'self' data:",
   // Supabase Auth (signInWithPassword/getSession/signOut — the frontend never
   // queries tables directly, see src/modules/shared/lib/supabase-client.ts).
-  // localhost:3001 is the NestJS API in local dev. fashion-pets-pz-api.onrender.com
-  // is the Render "develop" service, wired to Vercel Preview via NEXT_PUBLIC_API_URL
-  // for now — swap/add the production Render origin once that service exists.
-  `connect-src 'self' https://*.supabase.co https://fashion-pets-pz-api.onrender.com${isDev ? " http://localhost:3001" : ""}`,
+  // El origen del API sale de NEXT_PUBLIC_API_URL, que es distinta en cada
+  // ambiente de Vercel (Preview → Render develop, Production → Render prod).
+  // Antes estaba fijo el de develop y el navegador bloqueaba el API de prod.
+  `connect-src 'self' https://*.supabase.co${apiOrigin ? ` ${apiOrigin}` : ""}${isDev ? " http://localhost:3001" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
