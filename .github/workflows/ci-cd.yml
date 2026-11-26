@@ -84,13 +84,15 @@ jobs:
         if: steps.secrets_check.outputs.missing == '0'
         run: npm install --global vercel@latest
 
-      # FIXED: Added the --git-branch flag for pulling variables safely
+      # --git-branch solo vale para preview (trae las variables específicas de la
+      # rama); con production Vercel la rechaza: "`target` must be "preview"
+      # when specifying a `gitBranch`".
       - name: Pull Vercel project settings
         if: steps.secrets_check.outputs.missing == '0'
         run: >
-          vercel pull --yes 
-          --environment=${{ steps.target.outputs.target }} 
-          --git-branch=${{ github.ref_name }}
+          vercel pull --yes
+          --environment=${{ steps.target.outputs.target }}
+          ${{ steps.target.outputs.target == 'preview' && format('--git-branch={0}', github.ref_name) || '' }}
           --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
