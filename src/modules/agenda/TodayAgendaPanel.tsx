@@ -13,8 +13,8 @@ interface TodayAgendaPanelProps {
 }
 
 // Panel desplegable al lado del calendario: log del día — lo que falta de
-// hoy (citas programadas que no pasaron, en vivo a medida que avanza la
-// hora) más cualquier cancelación de hoy, para que quede visible que se
+// hoy (citas programadas que no terminaron, incluidas las que están en
+// curso, en vivo a medida que avanza la hora) más cualquier cancelación de hoy, para que quede visible que se
 // canceló y no solo que "no hay nada más". No depende de qué vista/fecha
 // esté mirando el usuario en el calendario principal.
 export function TodayAgendaPanel({
@@ -23,7 +23,7 @@ export function TodayAgendaPanel({
   loading,
   onOpenAppointment,
 }: TodayAgendaPanelProps) {
-  const { open, toggle, items } = useTodayAgendaPanel(appointments, petsById);
+  const { open, toggle, items, emptyMessage } = useTodayAgendaPanel(appointments, petsById);
 
   return (
     <div className="today-panel">
@@ -37,7 +37,7 @@ export function TodayAgendaPanel({
           {loading ? (
             <p className="text-small">Cargando…</p>
           ) : items.length === 0 ? (
-            <p className="text-small">Sin novedades por hoy.</p>
+            <p className="text-small">{emptyMessage}</p>
           ) : (
             <ul className="today-panel-list">
               {items.map(({ appt, pet }) => (
